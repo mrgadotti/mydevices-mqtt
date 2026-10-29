@@ -153,6 +153,7 @@ export const ptBR: Dict = {
   last_selected_colors: 'Últimas cores selecionadas',
   classic_palette: 'Paleta clássica',
   connection_lost: 'Conexão perdida. Reconectando…',
+  replace_default_ask: 'O broker "{name}" já é o padrão. Substituir por este?',
   hex: 'Hex',
   group_Controllers: 'Controles',
   group_Displays: 'Exibidores',

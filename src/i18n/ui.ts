@@ -23,6 +23,7 @@ export const U_EN = {
   last_selected_colors: 'Last selected colors',
   classic_palette: 'Classic palette',
   connection_lost: 'Connection lost. Reconnecting…',
+  replace_default_ask: 'The broker "{name}" is already the default. Replace it with this one?',
   hex: 'Hex',
   group_Controllers: 'Controllers',
   group_Displays: 'Displays',

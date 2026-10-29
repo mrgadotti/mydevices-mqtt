@@ -5,7 +5,8 @@ import { newBroker } from '../domain/defaults';
 import type { Broker, TileWidth } from '../domain/types';
 import { ActionIcons } from './ActionIcons';
 import type { RootStackParamList } from './navigation';
-import { S } from '../i18n';
+import { S, U } from '../i18n';
+import { ConfirmDialog } from './dialogs';
 import { appStore } from './store';
 import { Check, Field, FormScroll, Label, Radio } from './widgets';
 
@@ -24,6 +25,7 @@ export function BrokerFormScreen({ navigation, route }: Props) {
   });
   const isNew = !route.params.brokerId;
   const [autoConnect, setAutoConnect] = useState(initial.autoConnect);
+  const [replaceDefault, setReplaceDefault] = useState<Broker | null>(null);
   const [keepScreenOn, setKeepScreenOn] = useState(initial.keepScreenOn);
   const [metricsEditable, setMetricsEditable] = useState(initial.metricsEditable);
   const [neverHide, setNeverHide] = useState(initial.neverHideBrokerName);
@@ -69,9 +71,26 @@ export function BrokerFormScreen({ navigation, route }: Props) {
     });
   });
 
+  /** Only one broker can be the default: ask before taking the flag from another one. */
+  const onDefaultToggle = (on: boolean) => {
+    const other = on ? appStore.getState().brokers.find((b) => b.autoConnect && b.id !== initial.id) : undefined;
+    if (other) setReplaceDefault(other);
+    else setAutoConnect(on);
+  };
+
   return (
     <FormScroll>
-      <Check checked={autoConnect} onChange={setAutoConnect}>{S.default_auto_connect}</Check>
+      {replaceDefault ? (
+        <ConfirmDialog
+          message={U.replace_default_ask.replace('{name}', replaceDefault.name)}
+          onYes={() => {
+            setAutoConnect(true);
+            setReplaceDefault(null);
+          }}
+          onClose={() => setReplaceDefault(null)}
+        />
+      ) : null}
+      <Check checked={autoConnect} onChange={onDefaultToggle}>{S.default_auto_connect}</Check>
       <Check checked={keepScreenOn} onChange={setKeepScreenOn}>{S.keep_screen_on_when_connected}</Check>
       <Check checked={metricsEditable} onChange={setMetricsEditable}>{S.allow_metrics_management_description}</Check>
       {!metricsEditable ? <Check checked={neverHide} onChange={setNeverHide}>{S.never_hide_broker_name}</Check> : null}

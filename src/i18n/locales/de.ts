@@ -153,6 +153,7 @@ export const de: Dict = {
   last_selected_colors: 'Zuletzt gewählte Farben',
   classic_palette: 'Klassische Palette',
   connection_lost: 'Verbindung verloren. Verbinde erneut…',
+  replace_default_ask: 'Der Broker "{name}" ist bereits der Standard. Durch diesen ersetzen?',
   hex: 'Hex',
   group_Controllers: 'Steuerelemente',
   group_Displays: 'Anzeigen',
