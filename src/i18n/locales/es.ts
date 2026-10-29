@@ -21,8 +21,7 @@ export const es: Dict = {
   color_metric_description:
     'Con esta métrica puedes mostrar/establecer valores de color. Por ejemplo, puedes cambiar los colores de tus tiras LED.\nFormatos de color admitidos: HEX o cadena numérica.',
   connecting: 'Conectando…',
-  default_auto_connect:
-    'Predeterminada (conectar automáticamente al iniciar).\nNota: esta opción es útil si solo tienes una conexión configurada.\nSi tienes más de una conexión, puedes crear un acceso directo en la pantalla de inicio para cada una.\nPara crear el acceso directo, mantén pulsada cualquier conexión de la lista de conexiones.',
+  default_auto_connect: 'Broker predeterminado: abrir y conectar automáticamente al iniciar la app.',
   default_dialog_title: 'Selecciona un color',
   delete: 'Eliminar',
   delete_broker_ask: '¿Eliminar el broker? ¿Seguro?',
@@ -54,7 +53,7 @@ export const es: Dict = {
     'Tiempo límite del estado intermedio en segundos (si tras publicar no llega ningún mensaje en este tiempo, se quita el indicador giratorio de la métrica)',
   json_path_if_payload_is_json:
     'Extraer de la ruta JSON (si el payload está en formato JSON), p. ej.: $.level.value. La documentación de JSON path está en la URL de abajo:',
-  keep_screen_on_when_connected: 'Mantener la pantalla encendida mientras haya conexión con este broker',
+  keep_screen_on_when_connected: 'Mantener la pantalla siempre encendida mientras este broker esté abierto',
   label: 'Etiqueta',
   large: 'Grande',
   long_press_option_for_additional_actions: 'Mantén pulsada una opción para más acciones',
@@ -153,6 +152,7 @@ export const es: Dict = {
   type_here: 'Escribe aquí',
   last_selected_colors: 'Últimos colores seleccionados',
   classic_palette: 'Paleta clásica',
+  connection_lost: 'Conexión perdida. Reconectando…',
   hex: 'Hex',
   group_Controllers: 'Controles',
   group_Displays: 'Indicadores',

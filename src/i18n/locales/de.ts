@@ -21,8 +21,7 @@ export const de: Dict = {
   color_metric_description:
     'Mit dieser Metrik können Farbwerte angezeigt/gesetzt werden. So lassen sich zum Beispiel die Farben von LED-Streifen ändern.\nUnterstützte Farbformate: HEX oder numerische Zeichenfolge.',
   connecting: 'Verbinde…',
-  default_auto_connect:
-    'Standard (beim Start automatisch verbinden).\nHinweis: Diese Option ist nützlich, wenn nur eine Verbindung eingerichtet ist.\nBei mehreren Verbindungen kann für jede eine Verknüpfung auf dem Startbildschirm erstellt werden.\nZum Erstellen die gewünschte Verbindung in der Verbindungsliste lange drücken.',
+  default_auto_connect: 'Standard-Broker: beim Start der App automatisch öffnen und verbinden.',
   default_dialog_title: 'Farbe auswählen',
   delete: 'Löschen',
   delete_broker_ask: 'Broker löschen? Sind Sie sicher?',
@@ -54,7 +53,7 @@ export const de: Dict = {
     'Zeitlimit des Zwischenzustands in Sekunden (trifft nach dem Veröffentlichen in dieser Zeit keine Nachricht ein, wird der Fortschrittskreis von der Metrik entfernt)',
   json_path_if_payload_is_json:
     'Aus JSON-Pfad extrahieren (wenn der Payload im JSON-Format vorliegt), z. B.: $.level.value. Die Dokumentation zu JSON path steht unter der folgenden URL:',
-  keep_screen_on_when_connected: 'Bildschirm eingeschaltet lassen, solange mit diesem Broker verbunden',
+  keep_screen_on_when_connected: 'Bildschirm immer eingeschaltet lassen, solange dieser Broker geöffnet ist',
   label: 'Beschriftung',
   large: 'Groß',
   long_press_option_for_additional_actions: 'Option lange drücken für weitere Aktionen',
@@ -153,6 +152,7 @@ export const de: Dict = {
   type_here: 'Hier eingeben',
   last_selected_colors: 'Zuletzt gewählte Farben',
   classic_palette: 'Klassische Palette',
+  connection_lost: 'Verbindung verloren. Verbinde erneut…',
   hex: 'Hex',
   group_Controllers: 'Steuerelemente',
   group_Displays: 'Anzeigen',

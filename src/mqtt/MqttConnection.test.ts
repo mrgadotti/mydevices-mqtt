@@ -87,6 +87,23 @@ describe('MqttConnection', () => {
     expect(link.subscribes).toEqual(['a', 'a']);
   });
 
+  it('reconnectNow() skips the retry delay and is a no-op while connected or stopped', async () => {
+    const { link, conn } = setup();
+    conn.start();
+    link.up();
+    await jest.advanceTimersByTimeAsync(1);
+    conn.reconnectNow();
+    expect(link.attempts).toBe(1);
+    link.handlers.onClose('lost');
+    conn.reconnectNow();
+    expect(link.attempts).toBe(2);
+    await jest.advanceTimersByTimeAsync(5000);
+    expect(link.attempts).toBe(2);
+    conn.stop();
+    conn.reconnectNow();
+    expect(link.attempts).toBe(2);
+  });
+
   it('keeps retrying after a refused connection', async () => {
     const { link, conn } = setup();
     conn.start();

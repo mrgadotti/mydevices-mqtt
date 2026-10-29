@@ -22,6 +22,7 @@ export const U_EN = {
   type_here: 'Type here',
   last_selected_colors: 'Last selected colors',
   classic_palette: 'Classic palette',
+  connection_lost: 'Connection lost. Reconnecting…',
   hex: 'Hex',
   group_Controllers: 'Controllers',
   group_Displays: 'Displays',

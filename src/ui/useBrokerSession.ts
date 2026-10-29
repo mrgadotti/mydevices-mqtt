@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { AppState } from 'react-native';
 import { applyMessage, publishQos, pubTopic, recordPublished } from '../domain/metrics';
 import { routeMessage } from '../domain/routing';
 import type { Metric } from '../domain/types';
@@ -61,6 +62,9 @@ export function useBrokerSession(brokerId: string): BrokerSession {
     const c = new MqttConnection(clientOptionsFor(b, nativeTcp), { retryMs: 5000 });
     conn.current = c;
     setState('connecting');
+    const offAppState = AppState.addEventListener('change', (st) => {
+      if (st === 'active') c.reconnectNow();
+    });
     const offStatus = c.onStatus((s, error) => {
       if (s === 'connected') setState('connected');
       else if (s === 'connecting') setState('connecting');
@@ -114,6 +118,7 @@ export function useBrokerSession(brokerId: string): BrokerSession {
     });
     c.start();
     return () => {
+      offAppState.remove();
       offStatus();
       offMsg();
       if (flushTimer) clearTimeout(flushTimer);

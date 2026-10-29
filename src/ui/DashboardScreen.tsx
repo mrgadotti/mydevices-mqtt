@@ -267,6 +267,12 @@ export function DashboardScreen({ navigation, route }: Props) {
           <Text style={[type.body3, { color: skin.text8, marginLeft: 8 }]}>{S.connecting}</Text>
         </View>
       ) : null}
+      {session.state === 'failed' ? (
+        <View style={s.connecting}>
+          <ActivityIndicator size="small" color={skin.warning} />
+          <Text style={[type.body3, { color: skin.warning, marginLeft: 8 }]}>{U.connection_lost}</Text>
+        </View>
+      ) : null}
       {true ? (
         <ScrollView contentContainerStyle={{ paddingBottom: edit ? 96 : 0 }} scrollEnabled={!gesture}>
           {metrics.length === 0 && !edit ? (

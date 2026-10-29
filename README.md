@@ -5,7 +5,7 @@ A React Native + TypeScript MQTT client and dashboard for Android: several broke
 ## What it does
 
 - Several MQTT brokers (endpoints): plain TCP, TLS (optionally trusting self-signed certificates), or WebSocket when the
-  address is a `ws://` / `wss://` URL. User/password, client id, keep-alive 30 s, automatic reconnection.
+  address is a `ws://` / `wss://` URL. User/password, client id, keep-alive 30 s. Per broker: *Default* (opened and connected automatically when the app starts; only one broker can be the default) and *Keep the screen always on* while its dashboard is open. A lost connection shows a "Connection lost. Reconnecting…" banner, is retried every 5 s and is retried at once when the app returns to the foreground.
 - Dashboards with tiles added on demand: **Text, Switch/button, Range/progress, Multi choice, Image, Color**, each with
   options such as JSON path, QoS, retained, separate publish topic, intermediate state, blink expression,
   On Receive / On Display / On Tap JavaScript hooks).
@@ -45,9 +45,9 @@ Moto G7 Power, release build, dark theme, demo dashboard with one widget of ever
 |---|---|---|
 | <img src="docs/screenshots/dashboard-3.png" width="240"> | <img src="docs/screenshots/edit-mode.png" width="240"> | <img src="docs/screenshots/widget-box.png" width="240"> |
 
-| Settings | | |
+| Settings | Broker settings | |
 |---|---|---|
-| <img src="docs/screenshots/settings.png" width="240"> | | |
+| <img src="docs/screenshots/settings.png" width="240"> | <img src="docs/screenshots/broker-settings.png" width="240"> | |
 
 ## Widgets
 

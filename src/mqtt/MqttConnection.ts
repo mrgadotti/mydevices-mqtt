@@ -43,6 +43,14 @@ export class MqttConnection {
     if (!this.client) this.open();
   }
 
+  /** Skips the retry delay: used when the app returns to the foreground or the network is back. */
+  reconnectNow(): void {
+    if (this.stopped || this.client) return;
+    if (this.retry) clearTimeout(this.retry);
+    this.retry = null;
+    this.open();
+  }
+
   stop(): void {
     this.stopped = true;
     if (this.retry) clearTimeout(this.retry);
