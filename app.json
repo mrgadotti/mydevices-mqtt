@@ -1,0 +1,28 @@
+{
+  "expo": {
+    "name": "myDevice MQTT",
+    "slug": "mqtt-iot",
+    "version": "0.10.0",
+    "orientation": "default",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "backgroundColor": "#080808",
+    "plugins": [
+      "expo-dev-client",
+      "./plugins/withClassicWindow",
+      "./plugins/withBackgroundService",
+      "./plugins/withProguardKeep",
+      "./plugins/withReleaseSigning"
+    ],
+    "android": {
+      "package": "dev.marcelo.mqttiot",
+      "adaptiveIcon": {
+        "backgroundColor": "#1D1E22",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png",
+        "foregroundImage": "./assets/android-icon-foreground.png"
+      },
+      "predictiveBackGestureEnabled": false
+    }
+  }
+}
