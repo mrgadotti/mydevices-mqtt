@@ -3,10 +3,13 @@ import { AppState } from 'react-native';
 import { applyMessage, publishQos, pubTopic, recordPublished } from '../domain/metrics';
 import { routeMessage } from '../domain/routing';
 import type { Metric } from '../domain/types';
+import { localBrokerUsage } from '../localBroker/LocalBroker';
+import { localPort } from '../localBroker/usage';
 import { clientOptionsFor } from '../mqtt/connect';
 import { MqttConnection } from '../mqtt/MqttConnection';
 import { fromUtf8 } from '../mqtt/text';
 import { nativeTcp } from '../mqtt/tcp.native';
+import { U } from '../i18n';
 import { runOnReceive } from '../scripting/hooks';
 import { runtimeStore } from './runtime';
 import { makeHookEnv } from './scriptApp';
@@ -48,7 +51,7 @@ export function useBrokerSession(brokerId: string): BrokerSession {
   const publishRawRef = useRef<BrokerSession['publishRaw']>(() => Promise.reject(new Error('Not connected')));
 
   const connectionKey = broker
-    ? JSON.stringify([broker.address, broker.port, broker.ssl, broker.trust, broker.user, broker.password, broker.clientId])
+    ? JSON.stringify([broker.localBroker, broker.address, broker.port, broker.ssl, broker.trust, broker.user, broker.password, broker.clientId])
     : '';
 
   // Entering the dashboard clears every pending (intermediate) state, does.
@@ -119,8 +122,25 @@ export function useBrokerSession(brokerId: string): BrokerSession {
       const handler = extra.current.get(topic);
       handler?.(fromUtf8(payload));
     });
-    c.start();
+    let cancelled = false;
+    const lease = `session:${brokerId}`;
+    if (b.localBroker) {
+      // The embedded broker must listen before the client dials localhost; a failed start is a failed connection.
+      setState('connecting');
+      localBrokerUsage.acquire(lease, localPort(b)).then(
+        () => {
+          if (!cancelled) c.start();
+        },
+        () => {
+          if (cancelled) return;
+          setState('failed');
+          for (const cb of toasts.current) cb(U.local_broker_start_failed);
+        },
+      );
+    } else c.start();
     return () => {
+      cancelled = true;
+      if (b.localBroker) void localBrokerUsage.release(lease).catch(() => {});
       offAppState.remove();
       offStatus();
       offMsg();

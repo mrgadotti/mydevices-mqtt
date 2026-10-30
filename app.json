@@ -12,6 +12,7 @@
       "./plugins/withClassicWindow",
       "./plugins/withBackgroundService",
       "./plugins/withProguardKeep",
+      "./plugins/withLocalBroker",
       "./plugins/withReleaseSigning"
     ],
     "android": {

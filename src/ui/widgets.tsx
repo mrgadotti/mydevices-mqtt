@@ -56,9 +56,11 @@ interface FieldProps {
   width?: number;
   multiline?: boolean;
   autoFocus?: boolean;
+  /** Read-only and greyed out. */
+  disabled?: boolean;
 }
 
-export function Field({ value, onChangeText, keyboardType, secure, maxLength, center, width, multiline, autoFocus }: FieldProps) {
+export function Field({ value, onChangeText, keyboardType, secure, maxLength, center, width, multiline, autoFocus, disabled }: FieldProps) {
   const { s, skin } = useStyles();
   const [focused, setFocused] = useState(false);
   const input = useRef<TextInputInstance>(null);
@@ -73,6 +75,7 @@ export function Field({ value, onChangeText, keyboardType, secure, maxLength, ce
       ref={input}
       value={value}
       onChangeText={onChangeText}
+      editable={!disabled}
       // Topics, payloads, URLs and scripts must not be "corrected": this keyboard type switches suggestions off on Android.
       keyboardType={keyboardType ?? (secure ? undefined : 'visible-password')}
       secureTextEntry={secure}
@@ -91,16 +94,17 @@ export function Field({ value, onChangeText, keyboardType, secure, maxLength, ce
         { borderColor: focused ? skin.brand : skin.stroke3 },
         center ? { textAlign: 'center' } : null,
         width ? { width } : null,
+        disabled ? { opacity: 0.45 } : null,
       ]}
     />
   );
 }
 
 /** Checkbox: 22 dp box, brand fill when checked. */
-export function Check({ checked, onChange, children, style }: { checked: boolean; onChange: (v: boolean) => void; children: React.ReactNode; style?: StyleProp<ViewStyle> }) {
+export function Check({ checked, onChange, children, style, disabled }: { checked: boolean; onChange: (v: boolean) => void; children: React.ReactNode; style?: StyleProp<ViewStyle>; disabled?: boolean }) {
   const { s } = useStyles();
   return (
-    <Pressable onPress={() => onChange(!checked)} style={[s.row, style]} android_ripple={{ color: 'rgba(36,196,142,0.2)' }}>
+    <Pressable disabled={disabled} onPress={() => onChange(!checked)} style={[s.row, disabled ? { opacity: 0.45 } : null, style]} android_ripple={{ color: 'rgba(36,196,142,0.2)' }}>
       <View style={[s.box, checked ? s.boxOn : null]}>{checked ? <View style={s.tick} /> : null}</View>
       <Text style={s.rowText}>{children}</Text>
     </Pressable>

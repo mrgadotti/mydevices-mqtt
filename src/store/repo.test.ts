@@ -15,6 +15,18 @@ describe('Repo', () => {
     expect(await repo.loadBrokers()).toEqual(b);
   });
 
+  it('loads brokers saved before the localBroker field existed as not local, and round-trips the flag', async () => {
+    const kv = new MemoryKV();
+    const old: Record<string, unknown> = { ...newBroker({ name: 'old', longId: 1 }) };
+    delete old.localBroker;
+    await kv.setItem('brokers', JSON.stringify([old]));
+    const repo = new Repo(kv);
+    expect((await repo.loadBrokers())[0].localBroker).toBe(false);
+    const local = newBroker({ name: 'phone', longId: 2, localBroker: true, address: 'localhost' });
+    await repo.saveBrokers([local]);
+    expect((await repo.loadBrokers())[0].localBroker).toBe(true);
+  });
+
   it('keeps metrics per broker in the Gson json format', async () => {
     const kv = new MemoryKV();
     const repo = new Repo(kv);

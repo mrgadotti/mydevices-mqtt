@@ -10,6 +10,7 @@ describe('newBroker (Broker initializers)', () => {
       password: '',
       ssl: false,
       trust: false,
+      localBroker: false,
       autoConnect: false,
       keepScreenOn: true,
       metricsEditable: true,

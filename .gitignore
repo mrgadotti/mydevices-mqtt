@@ -1,8 +1,11 @@
 node_modules/
 .expo/
 dist/
-android/
-ios/
+/android/
+/ios/
 *.log
 .DS_Store
 secrets/
+native/build/
+modules/*/android/build/
+modules/*/android/.cxx/

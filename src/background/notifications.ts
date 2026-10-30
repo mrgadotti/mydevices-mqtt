@@ -33,13 +33,15 @@ export async function showEventNotification(content: NotificationContent, tileId
 }
 
 /** The persistent notification that keeps the process alive while MQTT connections are watched. */
-export async function startServiceNotification(brokerNames: string[]): Promise<void> {
+export async function startServiceNotification(brokerNames: string[], localBrokerText: string | null = null): Promise<void> {
   await requestNotificationPermission();
   await ensureChannels();
   await notifee.displayNotification({
     id: SERVICE_ID,
     title: 'myDevice MQTT',
-    body: `Listening for notifications: ${brokerNames.join(', ')}`,
+    body: [brokerNames.length > 0 ? `Listening for notifications: ${brokerNames.join(', ')}` : null, localBrokerText]
+      .filter(Boolean)
+      .join('\n'),
     android: {
       channelId: SERVICE_CHANNEL,
       asForegroundService: true,
