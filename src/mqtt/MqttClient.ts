@@ -1,19 +1,7 @@
-import {
-  encodeConnect,
-  encodeDisconnect,
-  encodePingreq,
-  encodePubAck,
-  encodePubComp,
-  encodePublish,
-  encodePubRec,
-  encodePubRel,
-  encodeSubscribe,
-  encodeUnsubscribe,
-  PacketParser,
-  utf8,
-  type Packet,
-} from './packets';
-import type { Transport, TransportFactory } from './transport';
+import { Buffer } from 'buffer';
+import mqtt, { type MqttClient as JsClient } from 'mqtt';
+import { transportStream } from './transportStream';
+import type { TransportFactory } from './transport';
 
 export type ClientStatus = 'disconnected' | 'connecting' | 'connected';
 
@@ -35,18 +23,15 @@ const CONNACK_ERRORS: Record<number, string> = {
   5: 'Not authorized',
 };
 
-type Waiter = { resolve: () => void; reject: (e: Error) => void };
-
-/** MQTT 3.1.1 client: one connection attempt per `connect()`; reconnection policy lives in the caller. */
+/**
+ * MQTT 3.1.1 client on top of MQTT.js: one connection attempt per `connect()`; reconnection
+ * policy lives in the caller (MqttConnection), so MQTT.js' own reconnect is switched off.
+ */
 export class MqttClient {
   status: ClientStatus = 'disconnected';
-  private transport: Transport | null = null;
-  private parser: PacketParser | null = null;
-  private nextId = 1;
-  private waiters = new Map<number, Waiter>();
-  private incomingQos2 = new Set<number>();
-  private pingTimer: ReturnType<typeof setTimeout> | null = null;
-  private pongTimer: ReturnType<typeof setTimeout> | null = null;
+  private js: JsClient | null = null;
+  private lastError: string | undefined;
+  private pending = new Set<(e: Error) => void>();
   private statusListeners = new Set<(s: ClientStatus, error?: string) => void>();
   private messageListeners = new Set<(topic: string, payload: Uint8Array, retained: boolean) => void>();
 
@@ -64,180 +49,101 @@ export class MqttClient {
 
   connect(): void {
     if (this.status !== 'disconnected') return;
+    this.lastError = undefined;
     this.setStatus('connecting');
-    this.parser = new PacketParser((p) => this.handle(p), (e) => this.drop(e));
-    const transport = this.opts.connect({
-      onOpen: () => {
-        if (this.transport !== transport) return;
-        transport.send(
-          encodeConnect({
-            clientId: this.opts.clientId,
-            keepAlive: this.opts.keepAlive,
-            cleanSession: this.opts.cleanSession ?? true,
-            username: this.opts.username,
-            password: this.opts.password,
-          }),
-        );
-      },
-      onData: (chunk) => {
-        if (this.transport === transport) this.parser?.push(chunk);
-      },
-      onClose: (error) => {
-        if (this.transport === transport) this.drop(error ?? 'Connection closed');
-      },
+    const js = new mqtt.MqttClient(() => transportStream(this.watched()) as never, {
+      protocolVersion: 4,
+      clientId: this.opts.clientId,
+      keepalive: this.opts.keepAlive,
+      clean: this.opts.cleanSession ?? true,
+      username: this.opts.username,
+      password: this.opts.password,
+      reconnectPeriod: 0,
+      resubscribe: false,
     });
-    this.transport = transport;
+    this.js = js;
+    js.on('connect', () => {
+      if (this.js === js) this.setStatus('connected');
+    });
+    js.on('error', (e: Error & { code?: number }) => {
+      if (this.js !== js) return;
+      this.lastError = (e.code !== undefined && CONNACK_ERRORS[e.code]) || e.message;
+    });
+    js.on('close', () => {
+      if (this.js !== js) return;
+      this.js = null;
+      js.removeAllListeners();
+      js.on('error', () => {});
+      this.rejectPending(new Error(this.lastError ?? 'Connection closed'));
+      this.setStatus('disconnected', this.lastError ?? 'Connection closed');
+    });
+    js.on('message', (topic: string, payload: Uint8Array, packet: { retain?: boolean }) => {
+      if (this.js !== js) return;
+      for (const cb of [...this.messageListeners]) cb(topic, payload, packet.retain === true);
+    });
   }
 
   disconnect(): void {
-    const t = this.transport;
-    if (!t) return;
-    if (this.status === 'connected') t.send(encodeDisconnect());
-    this.teardown(new Error('Disconnected'));
-    t.close();
+    const js = this.js;
+    if (!js) return;
+    this.js = null;
+    js.removeAllListeners();
+    js.on('error', () => {});
+    js.end(false);
+    this.rejectPending(new Error('Disconnected'));
     this.setStatus('disconnected');
   }
 
   subscribe(topic: string, qos: number): Promise<void> {
-    return this.request((id) => encodeSubscribe(id, [{ topic, qos }]), 'Subscription refused');
+    return this.call('Not connected', (js, done) =>
+      js.subscribe(topic, { qos: qos as 0 | 1 | 2 }, (err, granted) => {
+        if (err) done(/^Subscribe error/.test(err.message) ? new Error('Subscription refused') : err);
+        else if (granted?.some((g) => g.qos === 128)) done(new Error('Subscription refused'));
+        else done();
+      }),
+    );
   }
 
   unsubscribe(topic: string): Promise<void> {
-    return this.request((id) => encodeUnsubscribe(id, [topic]));
+    return this.call('Not connected', (js, done) => js.unsubscribe(topic, (err) => done(err ?? undefined)));
   }
 
   publish(topic: string, payload: string | Uint8Array, qos: number, retain: boolean): Promise<void> {
-    if (this.status !== 'connected' || !this.transport) return Promise.reject(new Error('Not connected'));
-    const bytes = typeof payload === 'string' ? utf8(payload) : payload;
-    if (qos === 0) {
-      this.transport.send(encodePublish({ topic, payload: bytes, qos: 0, retain }));
-      return Promise.resolve();
-    }
-    // QoS 2: PUBLISH -> PUBREC -> PUBREL -> PUBCOMP; the promise settles on PUBCOMP.
-    const level = qos > 1 ? 2 : 1;
-    return this.request((id) => encodePublish({ topic, payload: bytes, qos: level, retain, packetId: id }));
+    const body = typeof payload === 'string' ? payload : Buffer.from(payload);
+    return this.call('Not connected', (js, done) =>
+      js.publish(topic, body, { qos: Math.min(Math.max(qos, 0), 2) as 0 | 1 | 2, retain }, (err) => done(err ?? undefined)),
+    );
   }
 
-  private request(build: (id: number) => Uint8Array, refusal?: string): Promise<void> {
-    if (this.status !== 'connected' || !this.transport) return Promise.reject(new Error('Not connected'));
-    const id = this.allocId();
-    const transport = this.transport;
+  private call(notConnected: string, run: (js: JsClient, done: (err?: Error) => void) => void): Promise<void> {
+    const js = this.js;
+    if (this.status !== 'connected' || !js) return Promise.reject(new Error(notConnected));
     return new Promise<void>((resolve, reject) => {
-      this.waiters.set(id, {
-        resolve,
-        reject,
+      this.pending.add(reject);
+      run(js, (err) => {
+        this.pending.delete(reject);
+        if (err) reject(err);
+        else resolve();
       });
-      if (refusal) this.refusals.set(id, refusal);
-      transport.send(build(id));
     });
   }
 
-  private refusals = new Map<number, string>();
-
-  private allocId(): number {
-    const id = this.nextId;
-    this.nextId = this.nextId >= 0xffff ? 1 : this.nextId + 1;
-    return id;
+  /** MQTT.js only reports stream errors raised before CONNACK, so remember why the transport went away. */
+  private watched(): TransportFactory {
+    return (h) =>
+      this.opts.connect({
+        ...h,
+        onClose: (error) => {
+          if (error) this.lastError = error;
+          h.onClose(error);
+        },
+      });
   }
 
-  private settle(id: number, error?: Error): void {
-    const w = this.waiters.get(id);
-    if (!w) return;
-    this.waiters.delete(id);
-    this.refusals.delete(id);
-    if (error) w.reject(error);
-    else w.resolve();
-  }
-
-  private handle(p: Packet): void {
-    const t = this.transport;
-    if (!t) return;
-    switch (p.type) {
-      case 'connack':
-        if (p.returnCode !== 0) {
-          const message = CONNACK_ERRORS[p.returnCode] ?? `Connection refused (${p.returnCode})`;
-          this.teardown(new Error(message));
-          t.close();
-          this.setStatus('disconnected', message);
-          return;
-        }
-        this.setStatus('connected');
-        this.schedulePing();
-        return;
-      case 'suback': {
-        const refusal = this.refusals.get(p.packetId);
-        this.settle(p.packetId, p.returnCodes.includes(0x80) ? new Error(refusal ?? 'Refused') : undefined);
-        return;
-      }
-      case 'unsuback':
-      case 'puback':
-      case 'pubcomp':
-        this.settle(p.packetId);
-        return;
-      case 'pubrec':
-        if (this.waiters.has(p.packetId)) t.send(encodePubRel(p.packetId));
-        return;
-      case 'pingresp':
-        if (this.pongTimer) clearTimeout(this.pongTimer);
-        this.pongTimer = null;
-        this.schedulePing();
-        return;
-      case 'publish':
-        this.handlePublish(p, t);
-        return;
-      case 'pubrel':
-        this.incomingQos2.delete(p.packetId);
-        t.send(encodePubComp(p.packetId));
-        return;
-      default:
-        return;
-    }
-  }
-
-  private handlePublish(p: Extract<Packet, { type: 'publish' }>, t: Transport): void {
-    if (p.qos === 2 && p.packetId !== undefined) {
-      const fresh = !this.incomingQos2.has(p.packetId);
-      this.incomingQos2.add(p.packetId);
-      if (fresh) this.emit(p);
-      t.send(encodePubRec(p.packetId));
-      return;
-    }
-    this.emit(p);
-    if (p.qos === 1 && p.packetId !== undefined) t.send(encodePubAck(p.packetId));
-  }
-
-  private emit(p: Extract<Packet, { type: 'publish' }>): void {
-    for (const cb of [...this.messageListeners]) cb(p.topic, p.payload, p.retain);
-  }
-
-  private schedulePing(): void {
-    if (this.pingTimer) clearTimeout(this.pingTimer);
-    this.pingTimer = setTimeout(() => {
-      const t = this.transport;
-      if (!t || this.status !== 'connected') return;
-      t.send(encodePingreq());
-      this.pongTimer = setTimeout(() => {
-        const dead = this.transport;
-        this.drop('Keep alive timeout');
-        dead?.close();
-      }, this.opts.keepAlive * 1500);
-    }, this.opts.keepAlive * 1000);
-  }
-
-  private teardown(reason: Error): void {
-    if (this.pingTimer) clearTimeout(this.pingTimer);
-    if (this.pongTimer) clearTimeout(this.pongTimer);
-    this.pingTimer = this.pongTimer = null;
-    for (const id of [...this.waiters.keys()]) this.settle(id, reason);
-    this.incomingQos2.clear();
-    this.transport = null;
-    this.parser = null;
-  }
-
-  private drop(error: string): void {
-    if (!this.transport) return;
-    this.teardown(new Error(error));
-    this.setStatus('disconnected', error);
+  private rejectPending(error: Error): void {
+    const all = [...this.pending];
+    this.pending.clear();
+    for (const reject of all) reject(error);
   }
 
   private setStatus(s: ClientStatus, error?: string): void {

@@ -1,6 +1,6 @@
 import { newMetric } from './defaults';
 import { routeMessage } from './routing';
-import { utf8 } from '../mqtt/packets';
+import { utf8 } from '../mqtt/text';
 
 const T = (s: string) => utf8(s);
 

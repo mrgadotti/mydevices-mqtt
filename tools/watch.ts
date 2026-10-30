@@ -1,7 +1,7 @@
 import { newBroker } from '../src/domain/defaults';
 import { clientOptionsFor } from '../src/mqtt/connect';
 import { MqttConnection } from '../src/mqtt/MqttConnection';
-import { fromUtf8 } from '../src/mqtt/packets';
+import { fromUtf8 } from '../src/mqtt/text';
 import { nodeTcp } from '../src/mqtt/tcp.node';
 
 /** usage: tsx tools/watch.ts <host> <seconds> <topic-filter>...  (prints every received message) */

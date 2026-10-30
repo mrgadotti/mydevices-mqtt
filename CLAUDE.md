@@ -16,7 +16,7 @@ React Native (Expo, dev client) + TypeScript MQTT dashboard for Android. Package
 ## Layout
 
 - `src/domain` - data model, tile and widget logic, JSONPath, import/export JSON. Pure, fully unit tested.
-- `src/mqtt` - MQTT 3.1.1 codec, client, reconnecting connection, TCP/TLS and WebSocket transports.
+- `src/mqtt` - MQTT 3.1.1 client built on MQTT.js (`mqtt` package, `MqttClient.ts`), reconnecting connection, and the TCP/TLS and WebSocket transports it runs over (`transportStream.ts` adapts them to a stream). `fakeBroker.ts` is the in-memory broker used by the tests.
 - `src/scripting` - the `event` / `app` JavaScript hook API.
 - `src/store`, `src/background` - persistence, Zustand store, notification foreground service.
 - `src/ui` - screens, widgets, dialogs, skin/theme. Icons are inline SVG paths in `src/ui/icons/Icon.tsx` (Material Design paths for action icons); fonts are the system ones.

@@ -241,7 +241,7 @@ npx expo start --dev-client    # then open the app, or: adb reverse tcp:8081 tcp
 | Path | What |
 |---|---|
 | `src/domain` | Data model, tile logic, JSONPath, import/export JSON |
-| `src/mqtt` | MQTT 3.1.1 codec and client, reconnecting connection, TCP/TLS (react-native-tcp-socket) and WebSocket transports |
+| `src/mqtt` | MQTT 3.1.1 client on MQTT.js, reconnecting connection, TCP/TLS (react-native-tcp-socket) and WebSocket transports |
 | `src/scripting` | The `event` / `app` scripting API on top of Hermes' `eval` |
 | `src/background` | Notification tile service (Notifee, local notifications only) |
 | `src/store` | Persistence (brokers list + one tile list per broker) |
