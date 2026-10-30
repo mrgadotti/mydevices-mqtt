@@ -1,3 +1,4 @@
+import { runSpike } from './src/mqtt/spike';
 import { registerRootComponent } from 'expo';
 
 import App from './App';
@@ -10,3 +11,4 @@ import { registerServiceTask } from './src/background/notifications';
 registerServiceTask();
 
 registerRootComponent(App);
+setTimeout(runSpike, 3000);
