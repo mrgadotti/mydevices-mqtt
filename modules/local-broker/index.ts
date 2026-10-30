@@ -12,6 +12,8 @@ export interface LocalBrokerNative {
   start(port: number): Promise<void>;
   stop(): Promise<void>;
   isRunning(): boolean;
+  /** Stops the broker, closes the activity and kills the app process. */
+  quit(): void;
   getNetworkInfo(): LocalBrokerNetworkInfo;
   addListener(event: 'onExit', listener: (e: LocalBrokerExitEvent) => void): Subscription;
   addListener(event: 'onLog', listener: (e: LocalBrokerLogEvent) => void): Subscription;

@@ -58,3 +58,17 @@ describe('LocalBroker', () => {
     expect(d.getNetworkInfo().ips).toEqual([]);
   });
 });
+
+describe('LocalBroker.quit', () => {
+  it('calls the driver and reports true when the platform can end the app', () => {
+    const { driver } = fakeDriver();
+    let quits = 0;
+    const b = new LocalBroker({ ...driver, quit: () => void quits++ });
+    expect(b.quit()).toBe(true);
+    expect(quits).toBe(1);
+  });
+
+  it('reports false when the driver has no quit (stub, jest, iOS)', () => {
+    expect(new LocalBroker(fakeDriver().driver).quit()).toBe(false);
+  });
+});

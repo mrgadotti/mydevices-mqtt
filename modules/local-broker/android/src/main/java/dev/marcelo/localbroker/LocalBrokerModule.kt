@@ -1,5 +1,8 @@
 package dev.marcelo.localbroker
 
+import android.os.Handler
+import android.os.Looper
+import android.os.Process
 import expo.modules.kotlin.Promise
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
@@ -46,6 +49,16 @@ class LocalBrokerModule : Module() {
     }
 
     Function("isRunning") { runner?.isRunning() ?: false }
+
+    // Ends the app completely: the broker, the activity and the process (the foreground service lives in it).
+    Function("quit") {
+      synchronized(this@LocalBrokerModule) {
+        runner?.stop()
+        runner = null
+      }
+      appContext.currentActivity?.finishAndRemoveTask()
+      Handler(Looper.getMainLooper()).postDelayed({ Process.killProcess(Process.myPid()) }, 300)
+    }
 
     Function("getNetworkInfo") { NetworkInfo.read(context) }
 

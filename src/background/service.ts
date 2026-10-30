@@ -20,7 +20,7 @@ function refreshService(): void {
       ? U.local_broker_notification.replace('{address}', `${info.ip}:${info.port}`)
       : U.local_broker_notification_no_wifi.replace('{port}', String(info.port))
     : null;
-  if (watched.length > 0 || brokerText) void startServiceNotification(watched, brokerText).catch(() => {});
+  if (watched.length > 0 || brokerText) void startServiceNotification(watched, brokerText, U.exit_app).catch(() => {});
   else void stopServiceNotification().catch(() => {});
 }
 

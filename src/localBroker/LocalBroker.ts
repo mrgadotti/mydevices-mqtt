@@ -10,6 +10,8 @@ export interface LocalBrokerDriver {
   stop(): Promise<void>;
   isRunning(): boolean;
   getNetworkInfo(): LocalBrokerNetworkInfo;
+  /** Stops the broker and ends the whole app process (Android). Optional: absent in stubs. */
+  quit?(): void;
   /** Subscribes to unexpected exits of the broker process; returns the unsubscribe function. */
   onExit(listener: (e: { code: number; restarting: boolean }) => void): () => void;
   /** Subscribes to the broker's log lines; returns the unsubscribe function. */
@@ -50,6 +52,7 @@ export function nativeDriver(native: NativeModule = loadNative()): LocalBrokerDr
     getNetworkInfo: () => {
       try { return native.getNetworkInfo(); } catch { return NO_NETWORK; }
     },
+    quit: () => native.quit(),
     onExit: (l) => {
       const sub = native.addListener('onExit', l);
       return () => sub.remove();
@@ -85,6 +88,13 @@ export class LocalBroker {
 
   getNetworkInfo(): LocalBrokerNetworkInfo {
     return this.driver.getNetworkInfo();
+  }
+
+  /** Ends the app process through the platform side; false where that is not available. */
+  quit(): boolean {
+    if (!this.driver.quit) return false;
+    this.driver.quit();
+    return true;
   }
 
   /** Starts the broker on `port`; no-op when already running there, restarts when the port differs. */
