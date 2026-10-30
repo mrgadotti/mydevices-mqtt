@@ -3,9 +3,15 @@ name: Build
 on:
   push:
     branches: [main]
-    tags: ['v*']
+    # Release tags, with or without a leading "v" (v0.11.0, 0.11).
+    tags: ['v*', '[0-9]*']
   pull_request:
   workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Existing release tag to build and attach the APK to (empty: build only, APK kept as a workflow artifact)'
+        required: false
+        default: ''
 
 jobs:
   test:
@@ -23,13 +29,15 @@ jobs:
 
   apk:
     # Signed release APK: only for version tags and manual runs.
-    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
+    if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
     needs: test
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag || github.ref }}
       - uses: actions/setup-node@v4
         with:
           node-version: 20
@@ -40,6 +48,19 @@ jobs:
           java-version: 21
       - uses: gradle/actions/setup-gradle@v4
       - run: npm ci
+
+      - name: Check the toolchain used to build the local broker
+        # `expo prebuild` runs native/build-broker.sh (Mosquitto for arm64-v8a): it needs the NDK, CMake and Ninja that
+        # the runner image provides.
+        run: |
+          NDK="${ANDROID_NDK_LATEST_HOME:-$ANDROID_NDK_HOME}"
+          [ -f "$NDK/build/cmake/android.toolchain.cmake" ] || { echo "::error::Android NDK not found on the runner"; exit 1; }
+          echo "ANDROID_NDK_HOME=$NDK" >> "$GITHUB_ENV"
+          echo "NDK: $NDK"
+          cmake --version | head -1
+          command -v ninja > /dev/null || sudo apt-get install -y ninja-build > /dev/null
+          ninja --version
+
       - run: npx expo prebuild --platform android --no-install
 
       - name: Restore the release keystore
@@ -90,7 +111,15 @@ jobs:
           path: ${{ steps.apk.outputs.name }}
 
       - name: Attach the APK to the release
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: startsWith(github.ref, 'refs/tags/') || inputs.tag != ''
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "$GITHUB_REF_NAME" "${{ steps.apk.outputs.name }}" --title "$GITHUB_REF_NAME" --generate-notes
+          TAG: ${{ inputs.tag || github.ref_name }}
+          APK: ${{ steps.apk.outputs.name }}
+        run: |
+          # The release may already exist (created in the GitHub UI): then only add or replace the APK.
+          if gh release view "$TAG" > /dev/null 2>&1; then
+            gh release upload "$TAG" "$APK" --clobber
+          else
+            gh release create "$TAG" "$APK" --title "$TAG" --generate-notes
+          fi
