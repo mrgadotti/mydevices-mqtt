@@ -146,6 +146,13 @@ export function BrokerFormScreen({ navigation, route }: Props) {
       <Label top={10}>{S.name}</Label>
       <Field value={name} onChangeText={setName} />
       <Check checked={local} onChange={onLocalToggle} style={{ marginTop: 10 }}>{U.local_broker}</Check>
+      {local ? (
+        <>
+          <Label top={10}>{U.local_broker_connect_to}</Label>
+          <Hint>{net.ips.length > 0 ? net.ips.map((ip) => `${ip}:${port}`).join('\n') : U.local_broker_no_wifi}</Hint>
+          <Hint>{net.alias ? `${net.alias}:${port}` : U.local_broker_no_alias}</Hint>
+        </>
+      ) : null}
       <Label>{S.address}</Label>
       <Field value={address} onChangeText={setAddress} disabled={local} />
       <Label>{S.port}</Label>
@@ -159,9 +166,6 @@ export function BrokerFormScreen({ navigation, route }: Props) {
       <Field value={password} onChangeText={setPassword} secure disabled={local} />
       {local ? (
         <>
-          <Label top={10}>{U.local_broker_connect_to}</Label>
-          <Hint>{net.ips.length > 0 ? net.ips.map((ip) => `${ip}:${port}`).join('\n') : U.local_broker_no_wifi}</Hint>
-          {net.alias ? <Hint>{`${net.alias}:${port}`}</Hint> : null}
           <Hint>{U.local_broker_battery_hint}</Hint>
           <FlatButton title={U.local_broker_battery_button} onPress={() => void Linking.sendIntent('android.settings.IGNORE_BATTERY_OPTIMIZATION_SETTINGS').catch(() => {})} />
         </>

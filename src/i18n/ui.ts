@@ -28,6 +28,7 @@ export const U_EN = {
   local_broker_warning: 'The phone runs its own MQTT broker. It works only on the local network (same Wi-Fi): devices such as an ESP32 must connect to {address}. There is no authentication or encryption, so anyone on the network can read and publish.',
   local_broker_connect_to: 'Devices connect to',
   local_broker_no_wifi: 'No Wi-Fi connection',
+  local_broker_no_alias: 'No .local name on this phone: use the IP address',
   local_broker_battery_hint: 'Android may stop the broker in the background to save battery. Exempt this app from battery optimization to keep it running.',
   local_broker_battery_button: 'Battery settings',
   local_broker_start_failed: 'Could not start the local broker',

@@ -65,8 +65,9 @@ listens on port 1883 of every interface, with no TLS, no WebSocket and no authen
 
 - In *Add broker*, tick **Local broker**. A dialog explains that it works only on the local network (same Wi-Fi). The
   address becomes `localhost`, the port 1883, and the other connection fields are locked.
-- The app connects to `localhost`. ESP32 boards and other clients connect to the phone's address, shown under the fields
-  as **Devices connect to** (the Wi-Fi IPv4 address, and a `<name>.local` alias when the phone has a usable host name).
+- The app connects to `localhost`. ESP32 boards and other clients connect to the phone's address, shown right below the
+  checkbox as **Devices connect to** (the Wi-Fi IPv4 address, and a `<name>.local` alias when the phone has a usable host
+  name; many Android phones have none, and the form then says so).
 - The broker runs while a dashboard of that broker is open, while a notification tile of it is watched, or while it is
   the default broker. A foreground service notification stays up so Android keeps the process alive. Some phones still
   stop it to save battery: use the *Battery settings* button on the form to exempt the app.
