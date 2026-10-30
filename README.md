@@ -8,7 +8,7 @@ A React Native + TypeScript MQTT client and dashboard for Android: several broke
   address is a `ws://` / `wss://` URL. User/password, client id, keep-alive 30 s. Per broker: *Default* (opened and connected automatically when the app starts; only one broker can be the default: marking another one asks, naming the current default, before replacing it) and *Keep the screen always on* while its dashboard is open. A lost connection shows a "Connection lost. Reconnecting…" banner, is retried every 5 s and is retried at once when the app returns to the foreground.
 - Dashboards with tiles added on demand: **Text, Switch/button, Range/progress, Multi choice, Image, Color**, each with
   options such as JSON path, QoS, retained, separate publish topic, intermediate state, blink expression,
-  On Receive / On Display / On Tap JavaScript hooks).
+  On Receive / On Display / On Tap JavaScript hooks, see [docs/scripting.md](docs/scripting.md)).
 - Import / export of tiles over an MQTT topic, as JSON.
 - A built-in set of line icons for tiles and widgets.
 
@@ -271,7 +271,7 @@ npx expo start --dev-client    # then open the app, or: adb reverse tcp:8081 tcp
 |---|---|
 | `src/domain` | Data model, tile logic, JSONPath, import/export JSON |
 | `src/mqtt` | MQTT 3.1.1 client on MQTT.js, reconnecting connection, TCP/TLS (react-native-tcp-socket) and WebSocket transports |
-| `src/scripting` | The `event` / `app` scripting API on top of Hermes' `eval` |
+| `src/scripting` | The `event` / `app` scripting API on top of Hermes' `eval` (guide with examples: [docs/scripting.md](docs/scripting.md)) |
 | `src/background` | Notification tile service (Notifee, local notifications only) |
 | `src/store` | Persistence (brokers list + one tile list per broker) |
 | `src/ui` | Screens, widgets (`src/ui/widgets`), grid and dialogs; `icons/Icon.tsx` holds the icon set |
