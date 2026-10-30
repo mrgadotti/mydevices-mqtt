@@ -12,6 +12,7 @@ import { type } from './skin';
 import { useSkin } from './useSkin';
 import { useToast } from './toast';
 import { Reorderable } from './Reorderable';
+import { GithubLink } from './GithubLink';
 import { Dialog } from './widgets';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Brokers'>;
@@ -170,6 +171,7 @@ function AboutBody() {
       <View style={{ alignItems: 'center', marginTop: 12 }}>
         <Image source={require('../../assets/icon.png')} style={{ width: 50, height: 50 }} />
       </View>
+      <GithubLink center />
     </ScrollView>
   );
 }

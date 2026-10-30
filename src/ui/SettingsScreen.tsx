@@ -1,6 +1,7 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useLayoutEffect } from 'react';
 import { LANGS, U, updateSettings, useSettings } from '../i18n';
+import { GithubLink } from './GithubLink';
 import type { RootStackParamList } from './navigation';
 import { FormScroll, Label, Radio } from './widgets';
 
@@ -35,6 +36,7 @@ export function SettingsScreen({ navigation }: Props) {
       <Radio selected={theme === 'light'} onPress={() => updateSettings({ theme: 'light' })}>
         {U.theme_light}
       </Radio>
+      <GithubLink />
     </FormScroll>
   );
 }

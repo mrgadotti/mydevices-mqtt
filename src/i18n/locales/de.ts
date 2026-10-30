@@ -159,6 +159,7 @@ export const de: Dict = {
   local_broker_connect_to: 'Geräte verbinden sich mit',
   local_broker_no_wifi: 'Keine WLAN-Verbindung',
   local_broker_no_alias: 'Kein .local-Name auf diesem Telefon: IP-Adresse verwenden',
+  github_source: 'Quellcode auf GitHub',
   local_broker_battery_hint: 'Android kann den Broker im Hintergrund beenden, um Akku zu sparen. Nimm diese App von der Akkuoptimierung aus, damit er weiterläuft.',
   local_broker_battery_button: 'Akku-Einstellungen',
   local_broker_start_failed: 'Lokaler Broker konnte nicht gestartet werden',

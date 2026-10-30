@@ -159,6 +159,7 @@ export const ptBR: Dict = {
   local_broker_connect_to: 'Dispositivos conectam em',
   local_broker_no_wifi: 'Sem conexão Wi-Fi',
   local_broker_no_alias: 'Este celular não tem nome .local: use o endereço IP',
+  github_source: 'Código-fonte no GitHub',
   local_broker_battery_hint: 'O Android pode parar o broker em segundo plano para economizar bateria. Isente este app da otimização de bateria para mantê-lo ativo.',
   local_broker_battery_button: 'Ajustes de bateria',
   local_broker_start_failed: 'Não foi possível iniciar o broker local',
