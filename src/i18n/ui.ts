@@ -30,6 +30,7 @@ export const U_EN = {
   local_broker_no_wifi: 'No Wi-Fi connection',
   local_broker_no_alias: 'No .local name on this phone: use the IP address',
   github_source: 'Source code on GitHub',
+  version_label: 'Version',
   local_broker_battery_hint: 'Android may stop the broker in the background to save battery. Exempt this app from battery optimization to keep it running.',
   local_broker_battery_button: 'Battery settings',
   local_broker_start_failed: 'Could not start the local broker',

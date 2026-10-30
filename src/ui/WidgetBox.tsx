@@ -3,7 +3,7 @@ import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-nati
 import { WIDGET_ORDER, WIDGET_SPECS, type WidgetGroup, type WidgetKind } from '../domain/widgets';
 import { Icon } from './icons/Icon';
 import { type, type Skin } from './skin';
-import { U, tl } from '../i18n';
+import { S, U, tl } from '../i18n';
 
 const GLYPH: Record<WidgetKind, string> = {
   button: 'touch',
@@ -57,6 +57,9 @@ export function WidgetBox({ skin, onPick, onClose }: { skin: Skin; onPick: (k: W
       <Pressable style={[s.scrim, { backgroundColor: skin.scheme === 'dark' ? 'rgba(0,0,0,0.6)' : 'rgba(3,3,10,0.45)' }]} onPress={onClose}>
         <Pressable style={[s.sheet, { backgroundColor: skin.surface }]} onPress={() => {}}>
           <View style={[s.handle, { backgroundColor: skin.stroke4 }]} />
+          <Pressable onPress={onClose} hitSlop={12} accessibilityRole="button" accessibilityLabel={S.close} style={s.close}>
+            <Icon name="close" size={24} color={skin.text8} />
+          </Pressable>
           <Text style={[type.headline2, s.title, { color: skin.text9 }]}>{U.widget_box}</Text>
           <ScrollView contentContainerStyle={s.listPad}>
             <View style={[s.list, { backgroundColor: skin.surface, borderColor: skin.divider2 }]}>
@@ -99,6 +102,7 @@ const s = StyleSheet.create({
   scrim: { flex: 1, justifyContent: 'flex-end' },
   sheet: { maxHeight: '85%', borderTopLeftRadius: 8, borderTopRightRadius: 8, paddingTop: 16 },
   handle: { alignSelf: 'center', width: 32, height: 4, borderRadius: 2, marginBottom: 8 },
+  close: { position: 'absolute', top: 12, right: 12, width: 40, height: 40, alignItems: 'center', justifyContent: 'center', zIndex: 1 },
   title: { marginTop: 16, marginHorizontal: 24 },
   listPad: { padding: 8, paddingBottom: 34 },
   list: { borderRadius: 8, borderWidth: 1, paddingTop: 8, overflow: 'hidden' },

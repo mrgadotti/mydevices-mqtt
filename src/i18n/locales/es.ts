@@ -160,6 +160,7 @@ export const es: Dict = {
   local_broker_no_wifi: 'Sin conexión Wi-Fi',
   local_broker_no_alias: 'Este teléfono no tiene nombre .local: usa la dirección IP',
   github_source: 'Código fuente en GitHub',
+  version_label: 'Versión',
   local_broker_battery_hint: 'Android puede detener el broker en segundo plano para ahorrar batería. Excluye esta app de la optimización de batería para mantenerlo activo.',
   local_broker_battery_button: 'Ajustes de batería',
   local_broker_start_failed: 'No se pudo iniciar el broker local',

@@ -12,6 +12,7 @@ import { type } from './skin';
 import { useSkin } from './useSkin';
 import { useToast } from './toast';
 import { Reorderable } from './Reorderable';
+import app from '../../app.json';
 import { GithubLink } from './GithubLink';
 import { Dialog } from './widgets';
 
@@ -168,6 +169,7 @@ function AboutBody() {
     <ScrollView style={{ maxHeight: 420 }}>
       <Text style={[s.aboutLarge, { color: c.textPrimary }]}>{S.mqtt_dash}</Text>
       {small('MQTT client and dashboard for Android')}
+      {small(`${U.version_label} ${app.expo.version}`)}
       <View style={{ alignItems: 'center', marginTop: 12 }}>
         <Image source={require('../../assets/icon.png')} style={{ width: 50, height: 50 }} />
       </View>
