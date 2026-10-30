@@ -8,19 +8,11 @@ import { useToast } from './toast';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'JsEditor'>;
 
-const SLUG: Record<number, string> = {
-  1: 'text-metric',
-  2: 'switch-metric',
-  3: 'range-progress-metric',
-  4: 'multi-choice-metric',
-  5: 'image-metric',
-  6: 'color-metric',
-};
+const SCRIPTING_GUIDE = 'https://github.com/mrgadotti/mydevices-mqtt/blob/main/docs/scripting.md';
 
-/** The help page for a metric type and hook. */
-export function helpUrl(metricType: number, kind: 'receive' | 'display' | 'tap'): string {
-  const slug = SLUG[metricType];
-  return slug ? `https://byte1974.github.io/mqttdash/js/${slug}-on-${kind}.html` : 'https://byte1974.github.io/mqttdash/js/';
+/** The scripting guide, opened at the section of the hook being edited. */
+export function helpUrl(kind: 'receive' | 'display' | 'tap'): string {
+  return `${SCRIPTING_GUIDE}#on-${kind}`;
 }
 
 /** JsEditorActivity: a monospace editor with Help and OK. */
@@ -28,14 +20,14 @@ export function JsEditorScreen({ navigation, route }: Props) {
   const c = useColors();
   const [text, setText] = useState(getScriptDraft());
   const toast = useToast();
-  const { kind, metricType, title } = route.params;
+  const { kind, title } = route.params;
 
   useLayoutEffect(() => {
     navigation.setOptions({
       title,
       headerRight: () => (
         <View style={s.actions}>
-          <Pressable style={s.action} onPress={() => void Linking.openURL(helpUrl(metricType, kind)).catch((e: Error) => toast(e.message))}>
+          <Pressable style={s.action} onPress={() => void Linking.openURL(helpUrl(kind)).catch((e: Error) => toast(e.message))}>
             <Text style={[s.actionText, { color: c.textPrimary }]}>{S.help.toUpperCase()}</Text>
           </Pressable>
           <Pressable
