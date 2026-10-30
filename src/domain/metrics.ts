@@ -162,7 +162,7 @@ export function colorDisplay(m: Metric): { color: number; invalid: boolean } {
 
 export const pubTopic = (m: Metric): string => (m.topicPub.length > 0 ? m.topicPub : m.topic);
 
-export const publishQos = (m: Metric): 0 | 1 => (m.qos <= 1 ? (m.qos as 0 | 1) : 1);
+export const publishQos = (m: Metric): 0 | 1 | 2 => (m.qos === 0 || m.qos === 2 ? m.qos : 1);
 
 export function startPending<M extends Metric>(m: M, nowSec: number): M {
   return { ...m, enteredIntermediateStateAt: nowSec };

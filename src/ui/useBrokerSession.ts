@@ -140,7 +140,7 @@ export function useBrokerSession(brokerId: string): BrokerSession {
   const publishRaw = useCallback((topic: string, payload: string, retained: boolean, qos: number) => {
     const c = conn.current;
     if (!c) return Promise.reject(new Error('Not connected'));
-    return c.publish(topic, payload, qos > 1 ? 1 : qos, retained);
+    return c.publish(topic, payload, qos, retained);
   }, []);
 
   publishRawRef.current = publishRaw;

@@ -194,10 +194,10 @@ describe('publishing', () => {
     expect(pubTopic(sw({ topic: 'a', topicPub: 'b' }))).toBe('b');
   });
 
-  it('caps QoS 2 to 1', () => {
+  it('keeps the configured QoS up to 2', () => {
     expect(publishQos(sw({ qos: 0 }))).toBe(0);
     expect(publishQos(sw({ qos: 1 }))).toBe(1);
-    expect(publishQos(sw({ qos: 2 }))).toBe(1);
+    expect(publishQos(sw({ qos: 2 }))).toBe(2);
   });
 
   it('recordPublished enters the pending state on tiles sharing the topic', () => {

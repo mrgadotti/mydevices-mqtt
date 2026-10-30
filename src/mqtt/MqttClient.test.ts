@@ -150,6 +150,22 @@ describe('MqttClient subscribe and publish', () => {
     await expect(pending).resolves.toBeUndefined();
   });
 
+  it('publishes qos 2 through PUBREC/PUBREL and resolves on PUBCOMP', async () => {
+    const { link, client } = connected();
+    let done = false;
+    const pending = client.publish('t', 'x', 2, false).then(() => (done = true));
+    const p = link.sent.at(-1) as Extract<Packet, { type: 'publish' }>;
+    expect(p).toMatchObject({ type: 'publish', qos: 2 });
+    const [hi, lo] = [(p.packetId! >> 8) & 0xff, p.packetId! & 0xff];
+    link.reply([0x50, 0x02, hi, lo]);
+    expect(link.raw.at(-1)).toEqual(Uint8Array.from([0x62, 0x02, hi, lo]));
+    await Promise.resolve();
+    expect(done).toBe(false);
+    link.reply([0x70, 0x02, hi, lo]);
+    await pending;
+    expect(done).toBe(true);
+  });
+
   it('rejects pending publishes when the connection drops', async () => {
     const { link, client } = connected();
     const pending = client.publish('t', 'x', 1, false);

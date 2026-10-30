@@ -6,6 +6,7 @@ import {
   encodePubComp,
   encodePublish,
   encodePubRec,
+  encodePubRel,
   encodeSubscribe,
   encodeUnsubscribe,
   PacketParser,
@@ -112,8 +113,9 @@ export class MqttClient {
       this.transport.send(encodePublish({ topic, payload: bytes, qos: 0, retain }));
       return Promise.resolve();
     }
-    if (qos > 1) return Promise.reject(new Error('QoS 2 publish is not supported'));
-    return this.request((id) => encodePublish({ topic, payload: bytes, qos: 1, retain, packetId: id }));
+    // QoS 2: PUBLISH -> PUBREC -> PUBREL -> PUBCOMP; the promise settles on PUBCOMP.
+    const level = qos > 1 ? 2 : 1;
+    return this.request((id) => encodePublish({ topic, payload: bytes, qos: level, retain, packetId: id }));
   }
 
   private request(build: (id: number) => Uint8Array, refusal?: string): Promise<void> {
@@ -169,7 +171,11 @@ export class MqttClient {
       }
       case 'unsuback':
       case 'puback':
+      case 'pubcomp':
         this.settle(p.packetId);
+        return;
+      case 'pubrec':
+        if (this.waiters.has(p.packetId)) t.send(encodePubRel(p.packetId));
         return;
       case 'pingresp':
         if (this.pongTimer) clearTimeout(this.pongTimer);

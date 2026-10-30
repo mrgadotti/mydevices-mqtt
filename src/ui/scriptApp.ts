@@ -12,7 +12,7 @@ export function makeHookEnv(session: Pick<BrokerSession, 'publishRaw'>): HookEnv
       void Linking.openURL(second ?? first).catch(() => {});
     },
     publish(topic, payload, retained, qos) {
-      const q = qos > 1 || qos < 0 ? 0 : qos;
+      const q = qos > 2 || qos < 0 ? 0 : qos;
       void session.publishRaw(String(topic), String(payload), Boolean(retained), q).catch(() => {});
     },
   };
