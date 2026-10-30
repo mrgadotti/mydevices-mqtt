@@ -6,7 +6,7 @@ export interface Subscription {
 }
 
 type StatusCb = (s: ClientStatus, error?: string) => void;
-type MessageCb = (topic: string, payload: Uint8Array, retained: boolean) => void;
+type MessageCb = (topic: string, payload: Uint8Array, retained: boolean, qos: number) => void;
 
 /**
  * A broker connection that stays up: reconnects after `retryMs` (5 s) and keeps the wanted
@@ -79,8 +79,8 @@ export class MqttConnection {
   private open(): void {
     const client = new MqttClient(this.opts);
     this.client = client;
-    client.onMessage((t, p, r) => {
-      if (this.client === client) for (const cb of [...this.messageListeners]) cb(t, p, r);
+    client.onMessage((t, p, r, q) => {
+      if (this.client === client) for (const cb of [...this.messageListeners]) cb(t, p, r, q);
     });
     client.onStatus((s, error) => {
       if (this.client !== client) return;

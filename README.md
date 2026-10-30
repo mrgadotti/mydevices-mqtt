@@ -18,9 +18,9 @@ Also included:
 - **Background operation**: while a notification tile exists the app keeps its own MQTT connection in a foreground
   service, so notifications arrive with the app in the background. No Firebase, FCM or push token anywhere.
 - A default broker (`broker.emqx.io:1883`) on first run.
-- **Widget UI**: 35 widgets on a 24-column grid, each bound to MQTT topics: Button, Styled Button, Icon Button, Switch,
+- **Widget UI**: 36 widgets on a 24-column grid, each bound to MQTT topics: Button, Styled Button, Icon Button, Switch,
   Slider, Vertical Slider, Step Slider (both), Step H/V, Level Slider, Joystick, zeRGBa, Color Picker, Value Display,
-  Labeled Value, LED, Gauge, Radial and Enhanced Gauge, LCD, SimpleChart, Terminal, Level H/V, Image, Icon, Menu, Text /
+  Labeled Value, LED, Gauge, Radial and Enhanced Gauge, LCD, SimpleChart, Terminal, Log, Level H/V, Image, Icon, Menu, Text /
   Numeric / Time Input, Segmented Switch, Text, Dynamic Spacer and Notification. Edit mode (pencil) shows the grid, a tap
   selects a widget, dragging moves it, the corner handle resizes it, and a toolbox adds, edits, duplicates and deletes.
   The Widget Box lists them as Controllers, Displays, Interface and Other.
@@ -86,6 +86,7 @@ form; sizes are in cells of the 24-column grid (default size shown).
 | LCD (12x4) | Payload on an LCD-style panel. |
 | SimpleChart (24x14) | Line chart of the numbers received while the dashboard is open (last 200), with min, max and the latest value. |
 | Terminal (24x14) | Received lines (optional timestamps) and an input line that publishes what you type. |
+| Log (24x14) | Every message matching the topic filter (`#` and `+` allowed): time, topic, payload, QoS and a retained flag, in a ring buffer (*Max lines*, default 500). Scrolling up pauses it, the trash button clears it. It records only while the dashboard is open. |
 | Level H / Level V | Horizontal or vertical bar filled by the value. |
 | Image (12x12) | Image from a URL (refreshed) or from the payload. |
 | Icon (4x4) | Icon that follows the on / off state. |

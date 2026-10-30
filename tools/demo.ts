@@ -114,6 +114,7 @@ export function widgetDemoMetrics(): Metric[] {
     text('lcd'),
     range('chart'),
     text('terminal', { opts: { timestamps: true } }),
+    newMetric(1, { name: 'log', widget: 'log', topic: 'mqttiot/widgets/#', opts: { maxLines: 500 } } as Partial<Metric>),
     range('level'),
     range('levelV'),
     newMetric(5, { name: 'image', widget: 'image', kind: 1, imageUrl: 'https://www.gstatic.com/webp/gallery/1.png', reloadInterval: 60 } as Partial<Metric>),

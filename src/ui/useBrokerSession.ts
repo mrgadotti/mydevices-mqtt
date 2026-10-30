@@ -11,6 +11,7 @@ import { runOnReceive } from '../scripting/hooks';
 import { runtimeStore } from './runtime';
 import { makeHookEnv } from './scriptApp';
 import { appStore, useApp } from './store';
+import { feedLogs } from './widgets/logStore';
 
 export type SessionState = 'connecting' | 'connected' | 'failed';
 
@@ -89,9 +90,11 @@ export function useBrokerSession(brokerId: string): BrokerSession {
         setImageVersion((v) => v + 1);
       }
     };
-    const offMsg = c.onMessage((topic, payload) => {
+    const offMsg = c.onMessage((topic, payload, retained, qos) => {
       const t = nowSec();
       const stored = appStore.getState().metrics[brokerId] ?? [];
+      // Log widgets see every message matching their (wildcard) filter, not only exact-topic ones.
+      feedLogs(stored, topic, fromUtf8(payload), qos, retained, Date.now());
       const list = pending.size === 0 ? stored : stored.map((m) => pending.get(m.id) ?? m);
       for (const r of routeMessage(list, topic, payload, t)) {
         let metric = r.metric;
