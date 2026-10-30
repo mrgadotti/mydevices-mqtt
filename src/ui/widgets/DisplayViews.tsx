@@ -1,5 +1,5 @@
-import React, { useRef } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, View, type ScrollViewInstance } from 'react-native';
+import React, { useCallback, useRef, useState } from 'react';
+import { FlatList, Pressable, ScrollView, StyleSheet, Text, TextInput, View, type ScrollViewInstance } from 'react-native';
 import Svg, { Circle, Line, Path } from 'react-native-svg';
 import type { RangeMetric } from '../../domain/types';
 import { chartPath, opt } from '../../domain/widgetLogic';
@@ -7,6 +7,9 @@ import { Icon } from '../icons/Icon';
 import { type } from '../skin';
 import { arcPath, fitFont } from './geometry';
 import type { BodyProps } from './types';
+import type { LogLine } from '../../domain/logBuffer';
+import { formatLogTime } from '../../domain/logBuffer';
+import { clearLog, useLogLines } from './logStore';
 import { useLog, useSeries } from './useHistory';
 import { U } from '../../i18n';
 
@@ -142,6 +145,76 @@ export function TerminalBody(p: BodyProps) {
           setText('');
         }}
         style={{ marginTop: 4, backgroundColor: bg, color: '#FFFFFF', fontFamily: 'monospace', fontSize: 12, paddingHorizontal: 8, minHeight: 32, borderRadius: 4 }}
+      />
+    </View>
+  );
+}
+
+/** Distance from the bottom (dp) beyond which the user counts as having scrolled up. */
+const LOG_BOTTOM_SLACK = 40;
+
+const LogRow = React.memo(function LogRow({ line, topicColor, dim }: { line: LogLine; topicColor: string; dim: string }) {
+  return (
+    <Text style={{ fontFamily: 'monospace', fontSize: 11, lineHeight: 15, color: '#FFFFFF' }}>
+      <Text style={{ color: dim }}>{formatLogTime(line.time)} </Text>
+      <Text style={{ color: topicColor }}>{line.topic} </Text>
+      {line.payload}
+      <Text style={{ color: dim }}>{` Q${line.qos}${line.retained ? ' R' : ''}`}</Text>
+    </Text>
+  );
+});
+
+/**
+ * Log: every message matching the widget's topic filter (newest last) with time, topic, payload, QoS and retained
+ * flag. It follows the newest line until the user scrolls up; "Jump to latest" resumes. In memory, foreground only.
+ */
+export function LogBody(p: BodyProps) {
+  const lines = useLogLines(p.metric);
+  const list = useRef<FlatList<LogLine>>(null);
+  const [paused, setPaused] = useState(false);
+  const pausedRef = useRef(false);
+  const setPause = useCallback((v: boolean) => {
+    pausedRef.current = v;
+    setPaused(v);
+  }, []);
+  const bg = p.skin.scheme === 'dark' ? '#0E0F12' : '#03030A';
+  const dim = 'rgba(255,255,255,0.5)';
+  const toEnd = () => {
+    if (!pausedRef.current) list.current?.scrollToEnd({ animated: false });
+  };
+  return (
+    <View style={{ flex: 1 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
+        <Text numberOfLines={1} style={[type.body3, { flex: 1, color: paused ? p.skin.warning : p.skin.text7 }]}>
+          {paused ? `${U.log_paused} - ${lines.length}` : `${lines.length}`}
+        </Text>
+        {paused ? (
+          <Pressable disabled={p.edit} onPress={() => { setPause(false); list.current?.scrollToEnd({ animated: false }); }} accessibilityLabel={U.log_resume} hitSlop={8} style={{ marginRight: 12 }}>
+            <Icon name="arrow_down" size={20} color={p.skin.text9} />
+          </Pressable>
+        ) : null}
+        <Pressable disabled={p.edit} onPress={() => { clearLog(p.metric.id); setPause(false); }} accessibilityLabel={U.log_clear} hitSlop={8}>
+          <Icon name="trash" size={20} color={p.skin.text9} />
+        </Pressable>
+      </View>
+      <FlatList
+        ref={list}
+        data={lines}
+        keyExtractor={(l) => String(l.id)}
+        renderItem={({ item }) => <LogRow line={item} topicColor={widgetColor(p)} dim={dim} />}
+        style={{ flex: 1, backgroundColor: bg, borderRadius: 4 }}
+        contentContainerStyle={{ padding: 8 }}
+        ListEmptyComponent={<Text style={{ fontFamily: 'monospace', fontSize: 11, color: dim }}>{U.log_waiting}</Text>}
+        initialNumToRender={30}
+        windowSize={7}
+        nestedScrollEnabled
+        onContentSizeChange={toEnd}
+        onScroll={(e) => {
+          const { contentOffset, contentSize, layoutMeasurement } = e.nativeEvent;
+          const away = contentSize.height - contentOffset.y - layoutMeasurement.height > LOG_BOTTOM_SLACK;
+          if (away !== pausedRef.current) setPause(away);
+        }}
+        scrollEventThrottle={64}
       />
     </View>
   );

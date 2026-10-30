@@ -18,9 +18,11 @@ Also included:
 - **Background operation**: while a notification tile exists the app keeps its own MQTT connection in a foreground
   service, so notifications arrive with the app in the background. No Firebase, FCM or push token anywhere.
 - A default broker (`broker.emqx.io:1883`) on first run.
-- **Widget UI**: 35 widgets on a 24-column grid, each bound to MQTT topics: Button, Styled Button, Icon Button, Switch,
+- **Local broker**: the phone can run its own MQTT broker (see [Local broker](#local-broker)), so ESP32 boards on the
+  same Wi-Fi need no external server.
+- **Widget UI**: 36 widgets on a 24-column grid, each bound to MQTT topics: Button, Styled Button, Icon Button, Switch,
   Slider, Vertical Slider, Step Slider (both), Step H/V, Level Slider, Joystick, zeRGBa, Color Picker, Value Display,
-  Labeled Value, LED, Gauge, Radial and Enhanced Gauge, LCD, SimpleChart, Terminal, Level H/V, Image, Icon, Menu, Text /
+  Labeled Value, LED, Gauge, Radial and Enhanced Gauge, LCD, SimpleChart, Terminal, Log, Level H/V, Image, Icon, Menu, Text /
   Numeric / Time Input, Segmented Switch, Text, Dynamic Spacer and Notification. Edit mode (pencil) shows the grid, a tap
   selects a widget, dragging moves it, the corner handle resizes it, and a toolbox adds, edits, duplicates and deletes.
   The Widget Box lists them as Controllers, Displays, Interface and Other.
@@ -48,6 +50,32 @@ Moto G7 Power, release build, dark theme, demo dashboard with one widget of ever
 | Settings | Broker settings | Replace the default broker |
 |---|---|---|
 | <img src="docs/screenshots/settings.png" width="240"> | <img src="docs/screenshots/broker-settings.png" width="240"> | <img src="docs/screenshots/default-broker-replace.png" width="240"> |
+
+| Local broker settings |
+|---|
+| <img src="docs/screenshots/local-broker.png" width="240"> |
+
+## Local broker
+
+The app can host its own MQTT broker: [Eclipse Mosquitto](https://github.com/eclipse-mosquitto/mosquitto) 2.1, cross-compiled
+with the Android NDK (`native/build-broker.sh`) and run as a child process from the app's native library directory. It
+listens on port 1883 of every interface, with no TLS, no WebSocket and no authentication.
+
+<img src="docs/screenshots/local-broker.png" width="240">
+
+- In *Add broker*, tick **Local broker**. A dialog explains that it works only on the local network (same Wi-Fi). The
+  address becomes `localhost`, the port 1883, and the other connection fields are locked.
+- The app connects to `localhost`. ESP32 boards and other clients connect to the phone's address, shown right below the
+  checkbox as **Devices connect to** (the Wi-Fi IPv4 address, and a `<name>.local` alias when the phone has a usable host
+  name; many Android phones have none, and the form then says so).
+- The broker runs while a dashboard of that broker is open, while a notification tile of it is watched, or while it is
+  the default broker. A foreground service notification stays up so Android keeps the process alive. Some phones still
+  stop it to save battery: use the *Battery settings* button on the form to exempt the app.
+- Anyone on the same network can read and publish, so use it on a network you trust.
+- Check it from a PC on the same network: `mosquitto_sub -h <phone-ip> -t '#' -v`.
+- The Mosquitto sources in `native/mosquitto` are the unmodified 2.1.2 release except for one Android patch; see
+  [native/README.md](native/README.md) for the origin, the patch and the licenses.
+- To watch all the traffic from the phone itself, add a **Log** widget with the topic `#`.
 
 ## Widgets
 
@@ -86,6 +114,7 @@ form; sizes are in cells of the 24-column grid (default size shown).
 | LCD (12x4) | Payload on an LCD-style panel. |
 | SimpleChart (24x14) | Line chart of the numbers received while the dashboard is open (last 200), with min, max and the latest value. |
 | Terminal (24x14) | Received lines (optional timestamps) and an input line that publishes what you type. |
+| Log (24x14) | Every message matching the topic filter (`#` and `+` allowed): time, topic, payload, QoS and a retained flag, in a ring buffer (*Max lines*, default 500). Scrolling up pauses it, the trash button clears it. It records only while the dashboard is open. |
 | Level H / Level V | Horizontal or vertical bar filled by the value. |
 | Image (12x12) | Image from a URL (refreshed) or from the payload. |
 | Icon (4x4) | Icon that follows the on / off state. |
@@ -248,7 +277,9 @@ npx expo start --dev-client    # then open the app, or: adb reverse tcp:8081 tcp
 | `src/ui` | Screens, widgets (`src/ui/widgets`), grid and dialogs; `icons/Icon.tsx` holds the icon set |
 | `src/i18n` | Language and theme settings, the English texts (`en.ts`) and the `pt-BR`, `es` and `de` tables in `locales/` |
 | `tools` | Helpers to publish demo tiles / messages to a broker |
-| `plugins` | Expo config plugins (classic window, foreground service type, R8 keep rules) |
+| `plugins` | Expo config plugins (classic window, foreground service type, R8 keep rules, release signing, local broker build) |
+| `modules/local-broker` | Expo native module (Kotlin) that starts and stops the Mosquitto process and reports the network info |
+| `native` | Mosquitto and cJSON sources and `build-broker.sh` (NDK build); the build output in `native/build` is git-ignored |
 | `docs/superpowers` | Performance report |
 
 ## Limitations
@@ -256,9 +287,14 @@ npx expo start --dev-client    # then open the app, or: adb reverse tcp:8081 tcp
 - QoS 2 publishing is capped to QoS 1.
 - Scripts run on Hermes: a synchronous infinite loop cannot be interrupted (obvious `while (true)` / `for (;;)` sources are refused).
 - No home-screen shortcut for a broker, no analytics.
+- The local broker is Android arm64 only (`arm64-v8a`), plain TCP on port 1883, and Android may stop it in the background
+  unless the app is exempt from battery optimization. The `.local` alias depends on the phone having a host name.
 - Android only. On Android 16+ the system forces edge-to-edge windows, which this build does not yet adapt to.
 
 ## License
+
+The bundled Mosquitto broker (`native/mosquitto`) and cJSON (`native/cjson`) keep their own licenses (Eclipse Public
+License 2.0 / Eclipse Distribution License 1.0, and MIT). They run as a separate program, not linked into the app.
 
 myDevice MQTT is free software, released under the [GNU General Public License v3.0](LICENSE) (`GPL-3.0-only`): you can
 use, study, share and modify it, and any distributed version, modified or not, must stay under the same license with its

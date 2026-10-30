@@ -10,7 +10,7 @@ import { Icon } from '../icons/Icon';
 import { type, type Skin } from '../skin';
 import { arcPath, fitFont } from './geometry';
 import { opt } from '../../domain/widgetLogic';
-import { ChartBody, EnhancedGaugeBody, IconBody, IconButtonBody, LcdBody, LevelVBody, RadialGaugeBody, SpacerBody, TerminalBody, TextBody } from './DisplayViews';
+import { ChartBody, EnhancedGaugeBody, IconBody, IconButtonBody, LcdBody, LevelVBody, LogBody, RadialGaugeBody, SpacerBody, TerminalBody, TextBody } from './DisplayViews';
 import { JoystickBody, LevelSliderBody, NumericInputBody, RgbBody, StepButtonsBody, StepSliderBody, TextInputBody, TimeInputBody, VerticalSliderBody } from './ControlViews';
 import { WidgetCard } from './WidgetCard';
 import type { BodyProps, WidgetViewProps } from './types';
@@ -72,6 +72,8 @@ function Body(p: BodyProps) {
       return <LevelVBody {...p} />;
     case 'chart':
       return <ChartBody {...p} />;
+    case 'log':
+      return <LogBody {...p} />;
     case 'terminal':
       return <TerminalBody {...p} />;
     case 'icon':

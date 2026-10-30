@@ -39,6 +39,8 @@ export interface Broker {
   password: string;
   ssl: boolean;
   trust: boolean;
+  /** Runs the app's own embedded broker and connects to it on localhost. */
+  localBroker: boolean;
   autoConnect: boolean;
   keepScreenOn: boolean;
   metricsEditable: boolean;

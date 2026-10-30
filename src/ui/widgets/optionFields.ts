@@ -38,5 +38,6 @@ export const OPTION_FIELDS: Partial<Record<WidgetKind, OptionField[]>> = {
     { key: 'timestamps', label: 'Show timestamps', kind: 'bool', default: false },
     { key: 'newline', label: 'Add newline', kind: 'bool', default: false },
   ],
+  log: [{ key: 'maxLines', label: 'Max lines', kind: 'number', default: 500 }],
   radialGauge: [{ key: 'showLabel', label: 'Show label', kind: 'bool', default: true }],
 };

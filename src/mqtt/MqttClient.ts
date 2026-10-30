@@ -33,7 +33,7 @@ export class MqttClient {
   private lastError: string | undefined;
   private pending = new Set<(e: Error) => void>();
   private statusListeners = new Set<(s: ClientStatus, error?: string) => void>();
-  private messageListeners = new Set<(topic: string, payload: Uint8Array, retained: boolean) => void>();
+  private messageListeners = new Set<(topic: string, payload: Uint8Array, retained: boolean, qos: number) => void>();
 
   constructor(private readonly opts: MqttClientOptions) {}
 
@@ -42,7 +42,7 @@ export class MqttClient {
     return () => this.statusListeners.delete(cb);
   }
 
-  onMessage(cb: (topic: string, payload: Uint8Array, retained: boolean) => void): () => void {
+  onMessage(cb: (topic: string, payload: Uint8Array, retained: boolean, qos: number) => void): () => void {
     this.messageListeners.add(cb);
     return () => this.messageListeners.delete(cb);
   }
@@ -77,9 +77,9 @@ export class MqttClient {
       this.rejectPending(new Error(this.lastError ?? 'Connection closed'));
       this.setStatus('disconnected', this.lastError ?? 'Connection closed');
     });
-    js.on('message', (topic: string, payload: Uint8Array, packet: { retain?: boolean }) => {
+    js.on('message', (topic: string, payload: Uint8Array, packet: { retain?: boolean; qos?: number }) => {
       if (this.js !== js) return;
-      for (const cb of [...this.messageListeners]) cb(topic, payload, packet.retain === true);
+      for (const cb of [...this.messageListeners]) cb(topic, payload, packet.retain === true, packet.qos ?? 0);
     });
   }
 

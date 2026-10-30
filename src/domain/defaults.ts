@@ -33,6 +33,7 @@ export function newBroker(partial: Partial<Broker> = {}): Broker {
     password: '',
     ssl: false,
     trust: false,
+    localBroker: false,
     autoConnect: false,
     keepScreenOn: true,
     metricsEditable: true,
