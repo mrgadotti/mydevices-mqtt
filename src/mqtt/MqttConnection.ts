@@ -1,3 +1,4 @@
+import { reduceSubscriptions } from '../domain/topicFilter';
 import { MqttClient, type ClientStatus, type MqttClientOptions } from './MqttClient';
 
 export interface Subscription {
@@ -63,11 +64,8 @@ export class MqttConnection {
   }
 
   setSubscriptions(list: Subscription[]): void {
-    this.wanted = new Map();
-    for (const s of list) {
-      if (s.topic.length === 0) continue;
-      this.wanted.set(s.topic, Math.max(this.wanted.get(s.topic) ?? 0, s.qos));
-    }
+    // Overlapping subscriptions make the broker deliver every message once per subscription: keep only the covering ones.
+    this.wanted = new Map(reduceSubscriptions(list).map((s) => [s.topic, s.qos]));
     this.syncSubscriptions();
   }
 

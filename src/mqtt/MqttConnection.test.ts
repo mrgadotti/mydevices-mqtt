@@ -25,6 +25,16 @@ describe('MqttConnection', () => {
     expect(subscribes().sort()).toEqual(['a', 'b']);
   });
 
+  it('does not subscribe a topic that a wildcard already covers (the broker would send every message twice)', async () => {
+    const { link, conn, subscribes } = setup();
+    conn.setSubscriptions([{ topic: 'esp32/button', qos: 0 }, { topic: '#', qos: 0 }]);
+    conn.start();
+    await link.up();
+    await jest.advanceTimersByTimeAsync(1);
+    await settle();
+    expect(subscribes()).toEqual(['#']);
+  });
+
   it('diffs subscriptions while connected', async () => {
     const { link, conn, subscribes } = setup();
     conn.start();
