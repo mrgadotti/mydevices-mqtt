@@ -49,12 +49,17 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
       - run: npm ci
 
-      - name: Install the NDK and CMake used to build the local broker
-        # `expo prebuild` runs native/build-broker.sh (Mosquitto for arm64-v8a); pin the toolchain it needs.
+      - name: Check the toolchain used to build the local broker
+        # `expo prebuild` runs native/build-broker.sh (Mosquitto for arm64-v8a): it needs the NDK, CMake and Ninja that
+        # the runner image provides.
         run: |
-          yes | "$ANDROID_HOME"/cmdline-tools/latest/bin/sdkmanager --licenses > /dev/null || true
-          "$ANDROID_HOME"/cmdline-tools/latest/bin/sdkmanager --install "ndk;27.1.12297006" "cmake;3.22.1" > /dev/null
-          echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/27.1.12297006" >> "$GITHUB_ENV"
+          NDK="${ANDROID_NDK_LATEST_HOME:-$ANDROID_NDK_HOME}"
+          [ -f "$NDK/build/cmake/android.toolchain.cmake" ] || { echo "::error::Android NDK not found on the runner"; exit 1; }
+          echo "ANDROID_NDK_HOME=$NDK" >> "$GITHUB_ENV"
+          echo "NDK: $NDK"
+          cmake --version | head -1
+          command -v ninja > /dev/null || sudo apt-get install -y ninja-build > /dev/null
+          ninja --version
 
       - run: npx expo prebuild --platform android --no-install
 
