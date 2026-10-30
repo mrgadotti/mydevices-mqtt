@@ -47,3 +47,11 @@ describe('runScript', () => {
     expect(runScript('   ', {})).toEqual({ ok: true, result: undefined });
   });
 });
+
+describe('runScript cleanup', () => {
+  it('does not throw when a script leaves a global that cannot be deleted (Hermes makes eval `var`s non-configurable)', () => {
+    const src = "Object.defineProperty(globalThis, 'stuckByScript', { value: 1, configurable: false, writable: true }); 7";
+    expect(runScript(src, {})).toEqual({ ok: true, result: 7 });
+    expect(runScript('var again = 2; again', {})).toEqual({ ok: true, result: 2 });
+  });
+});

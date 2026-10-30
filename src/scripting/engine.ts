@@ -27,10 +27,27 @@ export function runScript(source: string, vars: Scope): ScriptResult {
     const err = e as Error;
     return { ok: false, error: err?.name && err?.message !== undefined ? `${err.name}: ${err.message}` : String(e) };
   } finally {
-    for (const k of Object.getOwnPropertyNames(g)) if (!before.has(k)) delete g[k];
+    for (const k of Object.getOwnPropertyNames(g)) if (!before.has(k)) forget(g, k);
     for (const [k, s] of shadowed) {
       if (s.had) g[k] = s.value;
-      else delete g[k];
+      else forget(g, k);
     }
+  }
+}
+
+/**
+ * Removes a global the script created. Hermes makes the `var`s of an indirect eval non-configurable, and deleting one
+ * throws in strict code, which would escape and crash the app: clear its value instead.
+ */
+function forget(g: Scope, k: string): void {
+  try {
+    if (delete g[k]) return;
+  } catch {
+    // not configurable: fall through
+  }
+  try {
+    g[k] = undefined;
+  } catch {
+    // read-only: nothing more to do
   }
 }
