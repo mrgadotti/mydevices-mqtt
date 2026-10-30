@@ -1,11 +1,11 @@
 import { newBroker, uuid } from '../domain/defaults';
 import { clientOptionsFor } from './connect';
 import { MqttConnection } from './MqttConnection';
-import { fromUtf8 } from './packets';
+import { fromUtf8 } from './text';
 import { nodeTcp } from './tcp.node';
 
 /** Talks to the public broker test.mosquitto.org (needs network). */
-const HOST = 'test.mosquitto.org';
+const HOST = process.env.MQTT_IT_HOST ?? 'test.mosquitto.org';
 const topicBase = () => `mqttiot/it/${uuid()}`;
 
 const conn = (address: string, port: string) =>

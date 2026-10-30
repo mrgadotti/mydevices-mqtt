@@ -5,7 +5,7 @@ import { routeMessage } from '../domain/routing';
 import type { Metric } from '../domain/types';
 import { clientOptionsFor } from '../mqtt/connect';
 import { MqttConnection } from '../mqtt/MqttConnection';
-import { fromUtf8 } from '../mqtt/packets';
+import { fromUtf8 } from '../mqtt/text';
 import { nativeTcp } from '../mqtt/tcp.native';
 import { runOnReceive } from '../scripting/hooks';
 import { runtimeStore } from './runtime';

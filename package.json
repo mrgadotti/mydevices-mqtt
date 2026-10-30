@@ -8,16 +8,19 @@
     "@react-native-async-storage/async-storage": "2.2.0",
     "@react-navigation/native": "^7.5.1",
     "@react-navigation/native-stack": "^7.21.0",
+    "buffer": "^6.0.3",
     "expo": "~58.0.19",
     "expo-dev-client": "~58.0.15",
     "expo-keep-awake": "~58.0.3",
     "expo-system-ui": "~58.0.6",
+    "mqtt": "^5.16.1",
     "react": "19.3.0",
     "react-native": "0.88.0",
     "react-native-safe-area-context": "~5.10.1",
     "react-native-screens": "~4.30.0",
     "react-native-svg": "15.16.0",
     "react-native-tcp-socket": "^6.4.3",
+    "readable-stream": "^4.8.0",
     "zustand": "^5.0.16"
   },
   "devDependencies": {
@@ -25,6 +28,7 @@
     "@types/node": "^26.6.5",
     "@types/react": "~19.3.0",
     "jest": "^30.5.2",
+    "mqtt-packet": "^9.0.2",
     "ts-jest": "^29.4.15",
     "tsx": "^4.23.15",
     "typescript": "~6.0.3"

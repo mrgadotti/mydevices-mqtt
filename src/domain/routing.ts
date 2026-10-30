@@ -1,4 +1,4 @@
-import { fromUtf8 } from '../mqtt/packets';
+import { fromUtf8 } from '../mqtt/text';
 import { applyMessage } from './metrics';
 import { isPending } from './metrics';
 import type { Metric } from './types';

@@ -1,7 +1,7 @@
 import { applyMessage } from '../domain/metrics';
 import { buildNotification, type NotificationContent } from '../domain/notification';
 import type { Broker, Metric, NotificationMetric } from '../domain/types';
-import { fromUtf8 } from '../mqtt/packets';
+import { fromUtf8 } from '../mqtt/text';
 import { runOnReceive, type HookEnv } from '../scripting/hooks';
 
 export interface ConnectionLike {

@@ -1,6 +1,6 @@
 import { newBroker, newMetric } from '../domain/defaults';
 import type { Broker, Metric } from '../domain/types';
-import { utf8 } from '../mqtt/packets';
+import { utf8 } from '../mqtt/text';
 import { BackgroundMqtt, type ConnectionLike } from './BackgroundMqtt';
 
 class FakeConn implements ConnectionLike {
