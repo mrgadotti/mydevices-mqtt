@@ -34,6 +34,11 @@ export const OPTION_FIELDS: Partial<Record<WidgetKind, OptionField[]>> = {
   timeInput: [],
   text: [{ key: 'text', label: 'Text', kind: 'text', default: '' }],
   chart: [{ key: 'line', label: 'Line width', kind: 'number', default: 2 }],
+  historyChart: [
+    { key: 'window', label: 'Window', kind: 'choice', default: '24h', choices: ['1h', '6h', '24h', '7d', '30d'] },
+    { key: 'minInterval', label: 'Minimum interval (s)', kind: 'number', default: 10 },
+    { key: 'line', label: 'Line width', kind: 'number', default: 2 },
+  ],
   terminal: [
     { key: 'timestamps', label: 'Show timestamps', kind: 'bool', default: false },
     { key: 'newline', label: 'Add newline', kind: 'bool', default: false },

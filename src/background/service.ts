@@ -3,6 +3,7 @@ import { clientOptionsFor } from '../mqtt/connect';
 import { nativeTcp } from '../mqtt/tcp.native';
 import { makeHookEnv } from '../ui/scriptApp';
 import { appStore } from '../ui/store';
+import { historyRecorder } from '../history/shared';
 import { U } from '../i18n';
 import { localBroker, localBrokerUsage } from '../localBroker/LocalBroker';
 import { localPort } from '../localBroker/usage';
@@ -53,6 +54,7 @@ export function startBackground(): void {
         },
       });
     },
+    record: (metrics, topic, payload) => void historyRecorder.handleMessage(metrics, topic, payload),
     notify: (content, tileId) => void showEventNotification(content, tileId).catch(() => {}),
     applyRuntime: (brokerId, metric) => appStore.getState().applyRuntime(brokerId, metric),
     now: () => Math.floor(Date.now() / 1000),

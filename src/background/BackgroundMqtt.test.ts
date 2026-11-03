@@ -27,15 +27,17 @@ const setup = () => {
   const notes: { title: string; body: string; id: string }[] = [];
   const updated: Metric[] = [];
   const statuses: string[][] = [];
+  const recorded: [string, string, string][] = [];
   const bg = new BackgroundMqtt({
     createConnection: (b) => { const c = new FakeConn(b); conns.push(c); return c; },
+    record: (ms, topic, payload) => recorded.push([ms.map((m) => m.id).join(','), topic, payload]),
     notify: (content, id) => notes.push({ ...content, id }),
     applyRuntime: (_b, m) => updated.push(m),
     now: () => 1000,
     onActiveChange: (names) => statuses.push(names),
     hookEnv: (publish) => ({ app: { publish, openUri() {} }, data: new Map() }),
   });
-  return { bg, conns, notes, updated, statuses };
+  return { bg, conns, notes, updated, statuses, recorded };
 };
 
 const broker = newBroker({ name: 'home', address: 'h', id: 'b1', clientId: 'mqttiot-aaaa1111' });
@@ -53,6 +55,17 @@ describe('BackgroundMqtt', () => {
       { topic: 'home/door', qos: 1 },
       { topic: 'home/window', qos: 0 },
     ]);
+  });
+
+  it('watches brokers with history charts and hands their messages to the recorder', () => {
+    const { bg, conns, recorded, notes } = setup();
+    const h = newMetric(3, { topic: 'home/temp', widget: 'historyChart' } as Partial<Metric>);
+    bg.sync([broker], { b1: [h, newMetric(3, { topic: 'home/other' })] });
+    expect(conns).toHaveLength(1);
+    expect(conns[0].subs).toEqual([{ topic: 'home/temp', qos: 0 }]);
+    conns[0].emit('home/temp', '21');
+    expect(recorded).toEqual([[h.id, 'home/temp', '21']]);
+    expect(notes).toHaveLength(0);
   });
 
   it('uses its own client id so it never collides with the dashboard session', () => {

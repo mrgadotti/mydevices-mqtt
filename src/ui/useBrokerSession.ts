@@ -9,6 +9,7 @@ import { clientOptionsFor } from '../mqtt/connect';
 import { MqttConnection } from '../mqtt/MqttConnection';
 import { fromUtf8 } from '../mqtt/text';
 import { nativeTcp } from '../mqtt/tcp.native';
+import { historyRecorder } from '../history/shared';
 import { U } from '../i18n';
 import { runOnReceive } from '../scripting/hooks';
 import { runtimeStore } from './runtime';
@@ -98,6 +99,8 @@ export function useBrokerSession(brokerId: string): BrokerSession {
       const stored = appStore.getState().metrics[brokerId] ?? [];
       // Log widgets see every message matching their (wildcard) filter, not only exact-topic ones.
       feedLogs(stored, topic, fromUtf8(payload), qos, retained, Date.now());
+      // History charts record every numeric payload, whether or not their widget is on screen.
+      void historyRecorder.handleMessage(stored, topic, fromUtf8(payload));
       const list = pending.size === 0 ? stored : stored.map((m) => pending.get(m.id) ?? m);
       for (const r of routeMessage(list, topic, payload, t)) {
         let metric = r.metric;

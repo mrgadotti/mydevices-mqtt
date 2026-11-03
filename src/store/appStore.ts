@@ -2,6 +2,8 @@ import { createStore } from 'zustand/vanilla';
 import { uuid, nextLongId } from '../domain/defaults';
 import { canPlace, layoutWidgets, type Rect } from '../domain/widgets';
 import type { Broker, Metric } from '../domain/types';
+import { historyRecorder } from '../history/shared';
+import { isHistoryMetric } from '../history/HistoryRecorder';
 import type { Repo } from './repo';
 
 export interface AppState {
@@ -98,6 +100,10 @@ export function createAppStore(repo: Repo, lazyMs = 10000) {
         saveBrokers();
       },
       removeBroker(id) {
+        // Metrics of a broker whose dashboard was never opened are not in memory yet: read them before they are deleted.
+        const known = get().metrics[id];
+        const forgetHistory = (list: Metric[]) => list.filter(isHistoryMetric).forEach((m) => void historyRecorder.forget(m.id));
+        const forgotten = known ? Promise.resolve(forgetHistory(known)) : repo.loadMetrics(id).then(forgetHistory, () => {});
         set((s) => {
           const { [id]: _gone, ...rest } = s.metrics;
           return { brokers: s.brokers.filter((x) => x.id !== id), metrics: rest };
@@ -107,7 +113,7 @@ export function createAppStore(repo: Repo, lazyMs = 10000) {
         if (t) clearTimeout(t);
         editTimers.delete(id);
         saveBrokers();
-        void repo.deleteMetrics(id);
+        void forgotten.then(() => repo.deleteMetrics(id));
       },
       moveBroker(from, to) {
         set((s) => ({ brokers: move(s.brokers, from, to) }));
@@ -144,6 +150,8 @@ export function createAppStore(repo: Repo, lazyMs = 10000) {
         edit(brokerId, (l) => l.map((x) => (x.id === m.id ? m : x)));
       },
       removeMetric(brokerId, id) {
+        const gone = (get().metrics[brokerId] ?? []).find((x) => x.id === id);
+        if (gone && isHistoryMetric(gone)) void historyRecorder.forget(id);
         edit(brokerId, (l) => l.filter((x) => x.id !== id));
       },
       moveMetric(brokerId, from, to) {

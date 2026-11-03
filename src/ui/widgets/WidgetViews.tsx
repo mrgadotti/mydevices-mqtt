@@ -71,6 +71,7 @@ function Body(p: BodyProps) {
     case 'levelV':
       return <LevelVBody {...p} />;
     case 'chart':
+    case 'historyChart':
       return <ChartBody {...p} />;
     case 'log':
       return <LogBody {...p} />;

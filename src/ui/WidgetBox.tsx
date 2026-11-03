@@ -30,6 +30,7 @@ const GLYPH: Record<WidgetKind, string> = {
   level: 'bars',
   levelV: 'bars',
   chart: 'chart_line',
+  historyChart: 'chart_line',
   terminal: 'console',
   log: 'notes',
   image: 'picture',

@@ -1,3 +1,4 @@
+import { isHistoryMetric } from '../history/HistoryRecorder';
 import { applyMessage } from '../domain/metrics';
 import { buildNotification, type NotificationContent } from '../domain/notification';
 import type { Broker, Metric, NotificationMetric } from '../domain/types';
@@ -22,6 +23,8 @@ export interface Deps {
   /** Called with the names of the brokers being watched whenever that set changes. */
   onActiveChange(names: string[]): void;
   /** Builds the script environment; `publish` sends through this service's own connection. */
+  /** Optional: receives every message of a watched broker together with its history-chart metrics. */
+  record?(metrics: Metric[], topic: string, payload: string): void;
   hookEnv(publish: (topic: string, payload: string, retained: boolean, qos: number) => void): HookEnv;
 }
 
@@ -31,6 +34,8 @@ interface Watch {
   key: string;
   name: string;
   tiles: NotificationMetric[];
+  /** Metrics recorded by history charts (not notified). */
+  history: Metric[];
 }
 
 const connectionKey = (b: Broker): string => JSON.stringify([b.address, b.port, b.ssl, b.trust, b.user, b.password, b.clientId]);
@@ -46,10 +51,11 @@ export class BackgroundMqtt {
   constructor(private readonly deps: Deps) {}
 
   sync(brokers: Broker[], metrics: Record<string, Metric[]>): void {
-    const wanted = new Map<string, { broker: Broker; tiles: NotificationMetric[] }>();
+    const wanted = new Map<string, { broker: Broker; tiles: NotificationMetric[]; history: Metric[] }>();
     for (const b of brokers) {
       const tiles = (metrics[b.id] ?? []).filter((m): m is NotificationMetric => m.type === 7 && m.topic.length > 0);
-      if (tiles.length > 0) wanted.set(b.id, { broker: b, tiles });
+      const history = this.deps.record ? (metrics[b.id] ?? []).filter((m) => m.topic.length > 0 && isHistoryMetric(m)) : [];
+      if (tiles.length > 0 || history.length > 0) wanted.set(b.id, { broker: b, tiles, history });
     }
 
     for (const [id, w] of [...this.watches]) {
@@ -60,15 +66,15 @@ export class BackgroundMqtt {
       }
     }
 
-    for (const [id, { broker, tiles }] of wanted) {
+    for (const [id, { broker, tiles, history }] of wanted) {
       let w = this.watches.get(id);
       if (!w) {
         const conn = this.deps.createConnection({ ...broker, clientId: `${broker.clientId}-bg` });
-        w = { conn, key: connectionKey(broker), name: broker.name, tiles };
+        w = { conn, key: connectionKey(broker), name: broker.name, tiles, history };
         this.watches.set(id, w);
         const watch = w;
         conn.onMessage((topic, payload) => this.onMessage(id, watch, topic, payload));
-        conn.setSubscriptions(this.subscriptions(tiles));
+        conn.setSubscriptions(this.subscriptions(tiles, history));
         conn.start();
       } else {
         // The service owns "what was last notified": the dashboard may update the stored tile at any time.
@@ -78,7 +84,8 @@ export class BackgroundMqtt {
           return old ? { ...t, lastPayload: old.lastPayload, lastActivity: old.lastActivity } : t;
         });
         w.name = broker.name;
-        w.conn.setSubscriptions(this.subscriptions(tiles));
+        w.history = history;
+        w.conn.setSubscriptions(this.subscriptions(tiles, history));
       }
     }
 
@@ -99,15 +106,16 @@ export class BackgroundMqtt {
     }
   }
 
-  private subscriptions(tiles: NotificationMetric[]): { topic: string; qos: number }[] {
+  private subscriptions(tiles: NotificationMetric[], history: Metric[]): { topic: string; qos: number }[] {
     const byTopic = new Map<string, number>();
-    for (const t of tiles) byTopic.set(t.topic, Math.max(byTopic.get(t.topic) ?? 0, t.qos));
+    for (const t of [...tiles, ...history]) byTopic.set(t.topic, Math.max(byTopic.get(t.topic) ?? 0, t.qos));
     return [...byTopic].map(([topic, qos]) => ({ topic, qos }));
   }
 
   private onMessage(brokerId: string, watch: Watch, topic: string, bytes: Uint8Array): void {
     const text = fromUtf8(bytes);
     const t = this.deps.now();
+    if (watch.history.length > 0) this.deps.record?.(watch.history, topic, text);
     watch.tiles = watch.tiles.map((tile) => {
       if (tile.topic !== topic) return tile;
       const first = applyMessage(tile, text, t);

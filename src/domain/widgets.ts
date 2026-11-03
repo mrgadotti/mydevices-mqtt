@@ -31,6 +31,7 @@ export type WidgetKind =
   | 'level'
   | 'levelV'
   | 'chart'
+  | 'historyChart'
   | 'terminal'
   | 'log'
   | 'image'
@@ -100,6 +101,7 @@ export const WIDGET_SPECS: Record<WidgetKind, WidgetSpec> = {
   level: spec('level', 'Level H', 'Displays', 3, '8x4', '4x1', '24x50'),
   levelV: spec('levelV', 'Level V', 'Displays', 3, '3x8', '1x4', '24x50'),
   chart: spec('chart', 'SimpleChart', 'Displays', 3, '24x14', '12x8', '24x50'),
+  historyChart: spec('historyChart', 'History chart', 'Displays', 3, '24x14', '12x8', '24x50'),
   terminal: spec('terminal', 'Terminal', 'Displays', 1, '24x14', '12x8', '24x50'),
   log: spec('log', 'Log', 'Displays', 1, '24x14', '12x8', '24x50'),
   image: spec('image', 'Image', 'Displays', 5, '12x12', '1x1', '24x50'),
@@ -117,7 +119,7 @@ export const WIDGET_SPECS: Record<WidgetKind, WidgetSpec> = {
 /** Widget Box order: Controllers, Displays, Interface, Other. */
 export const WIDGET_ORDER: WidgetKind[] = [
   'button', 'styledButton', 'iconButton', 'slider', 'verticalSlider', 'stepSlider', 'verticalStepSlider', 'joystick', 'rgb', 'color', 'stepH', 'stepV', 'switch', 'levelSlider',
-  'value', 'labeled', 'led', 'gauge', 'radialGauge', 'enhancedGauge', 'lcd', 'chart', 'terminal', 'log', 'level', 'levelV', 'image', 'icon',
+  'value', 'labeled', 'led', 'gauge', 'radialGauge', 'enhancedGauge', 'lcd', 'chart', 'historyChart', 'terminal', 'log', 'level', 'levelV', 'image', 'icon',
   'menu', 'textInput', 'numericInput', 'timeInput', 'segmented', 'text', 'spacer',
   'notification',
 ];
