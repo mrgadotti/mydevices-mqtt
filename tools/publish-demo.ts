@@ -5,7 +5,7 @@ import { MqttConnection } from '../src/mqtt/MqttConnection';
 import { nodeTcp } from '../src/mqtt/tcp.node';
 import { DEMO_BASE, DEMO_VALUES, WIDGET_VALUES, demoMetrics, demoMetricsWithData, scriptDemoMetrics, widgetDemoMetrics } from './demo';
 
-/** usage: tsx tools/publish-demo.ts [values|metrics] */
+/** usage: tsx tools/publish-demo.ts [values|metrics|widgets|scripts|metrics-data|history] [host] ('history' feeds the history chart with a noisy sine for 5 minutes) */
 async function main() {
   const what = process.argv[2] ?? 'values';
   const host = process.argv[3] ?? 'broker.emqx.io';
@@ -18,6 +18,14 @@ async function main() {
     await c.publish(`${DEMO_BASE}/widgets`, serializeMetrics(widgetDemoMetrics()), 1, true);
     for (const [k, v] of Object.entries(WIDGET_VALUES)) await c.publish(`mqttiot/widgets/${k}`, v, 1, true);
     console.log(`published widget demo to ${DEMO_BASE}/widgets and values under mqttiot/widgets/ (retained)`);
+  } else if (what === 'history') {
+    const topic = 'mqttiot/widgets/historyChart';
+    console.log(`publishing a sine wave to ${topic} every 5 s for 5 minutes`);
+    for (let i = 0; i < 60; i++) {
+      const v = 50 + 30 * Math.sin(i / 6) + (Math.random() - 0.5) * 6;
+      await c.publish(topic, v.toFixed(1), 0, false);
+      await new Promise((r) => setTimeout(r, 5000));
+    }
   } else if (what === 'scripts') {
     await c.publish(`${DEMO_BASE}/scripts`, serializeMetrics(scriptDemoMetrics()), 1, true);
     console.log(`published script demo to ${DEMO_BASE}/scripts (retained)`);

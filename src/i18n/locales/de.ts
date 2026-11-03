@@ -151,6 +151,8 @@ export const de: Dict = {
   add_widget: 'Widget hinzufügen',
   no_options: 'Keine Optionen',
   type_here: 'Hier eingeben',
+  history_no_data: 'Noch kein Verlauf',
+  history_minmax: 'min {min} / max {max}',
   last_selected_colors: 'Zuletzt gewählte Farben',
   classic_palette: 'Klassische Palette',
   connection_lost: 'Verbindung verloren. Verbinde erneut…',

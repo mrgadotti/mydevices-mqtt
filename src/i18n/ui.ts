@@ -21,6 +21,8 @@ export const U_EN = {
   add_widget: 'Add widget',
   no_options: 'No options',
   type_here: 'Type here',
+  history_no_data: 'No history yet',
+  history_minmax: 'min {min} / max {max}',
   last_selected_colors: 'Last selected colors',
   classic_palette: 'Classic palette',
   connection_lost: 'Connection lost. Reconnecting…',

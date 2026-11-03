@@ -151,6 +151,8 @@ export const es: Dict = {
   add_widget: 'Añadir widget',
   no_options: 'Sin opciones',
   type_here: 'Escribe aquí',
+  history_no_data: 'Aún no hay historial',
+  history_minmax: 'mín {min} / máx {max}',
   last_selected_colors: 'Últimos colores seleccionados',
   classic_palette: 'Paleta clásica',
   connection_lost: 'Conexión perdida. Reconectando…',

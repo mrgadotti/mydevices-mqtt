@@ -113,6 +113,7 @@ export function widgetDemoMetrics(): Metric[] {
     range('enhancedGauge'),
     text('lcd'),
     range('chart'),
+    range('historyChart', { opts: { window: '1h', minInterval: 5, line: 2 } }),
     text('terminal', { opts: { timestamps: true } }),
     newMetric(1, { name: 'log', widget: 'log', topic: 'mqttiot/widgets/#', opts: { maxLines: 500 } } as Partial<Metric>),
     range('level'),
@@ -133,6 +134,6 @@ export function widgetDemoMetrics(): Metric[] {
 export const WIDGET_VALUES: Record<string, string> = {
   button: '1', styledButton: '1', iconButton: '1', switch: '1', slider: '35', verticalSlider: '60', stepSlider: '40', verticalStepSlider: '30',
   stepH: '25', stepV: '50', levelSlider: '70', joystick: '128,200', rgb: '#FF8800', color: '#24C48E', value: '21.5', labeled: '22.4',
-  led: '1', gauge: '65', radialGauge: '45', enhancedGauge: '80', lcd: '12:34', chart: '50', terminal: 'boot ok', level: '55', levelV: '75',
+  led: '1', gauge: '65', radialGauge: '45', enhancedGauge: '80', lcd: '12:34', chart: '50', historyChart: '50', terminal: 'boot ok', level: '55', levelV: '75',
   icon: '1', menu: 'c', textInput: 'hello', numericInput: '7', timeInput: '08:30', segmented: 'h',
 };

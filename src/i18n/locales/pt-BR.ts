@@ -151,6 +151,8 @@ export const ptBR: Dict = {
   add_widget: 'Adicionar widget',
   no_options: 'Sem opções',
   type_here: 'Digite aqui',
+  history_no_data: 'Ainda sem histórico',
+  history_minmax: 'mín {min} / máx {max}',
   last_selected_colors: 'Últimas cores selecionadas',
   classic_palette: 'Paleta clássica',
   connection_lost: 'Conexão perdida. Reconectando…',

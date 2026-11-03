@@ -1,6 +1,7 @@
 import { NavigationContainer, DarkTheme, DefaultTheme, type NavigationState } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StatusBar } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import React, { useEffect, useState } from 'react';
 import { loadSettings, useSettings } from './src/i18n';
 import { View } from 'react-native';
@@ -67,6 +68,7 @@ export default function App() {
   }, []);
 
   return (
+    <GestureHandlerRootView style={{ flex: 1 }}>
     <SafeAreaProvider>
       <Root>
       <ToastProvider>
@@ -74,5 +76,6 @@ export default function App() {
       </ToastProvider>
       </Root>
     </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }

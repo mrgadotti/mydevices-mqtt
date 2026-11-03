@@ -12,6 +12,7 @@ import { arcPath, fitFont } from './geometry';
 import { opt } from '../../domain/widgetLogic';
 import { ChartBody, EnhancedGaugeBody, IconBody, IconButtonBody, LcdBody, LevelVBody, LogBody, RadialGaugeBody, SpacerBody, TerminalBody, TextBody } from './DisplayViews';
 import { JoystickBody, LevelSliderBody, NumericInputBody, RgbBody, StepButtonsBody, StepSliderBody, TextInputBody, TimeInputBody, VerticalSliderBody } from './ControlViews';
+import { HistoryChartBody } from './HistoryChartView';
 import { WidgetCard } from './WidgetCard';
 import type { BodyProps, WidgetViewProps } from './types';
 import { U } from '../../i18n';
@@ -71,8 +72,9 @@ function Body(p: BodyProps) {
     case 'levelV':
       return <LevelVBody {...p} />;
     case 'chart':
-    case 'historyChart':
       return <ChartBody {...p} />;
+    case 'historyChart':
+      return <HistoryChartBody {...p} />;
     case 'log':
       return <LogBody {...p} />;
     case 'terminal':
