@@ -26,6 +26,11 @@ export interface AppState {
   /** Widget grid: moves/resizes one widget; false (and no change) when it would overlap or leave the 24 columns. */
   setWidgetRect(brokerId: string, id: string, rect: Rect): boolean;
   replaceMetrics(brokerId: string, list: Metric[]): void;
+  /**
+   * Replaces every broker and dashboard (configuration import). Resolves once everything is persisted.
+   * History samples of widgets that are no longer present are forgotten.
+   */
+  replaceAll(brokers: Broker[], metricsByBroker: Record<string, Metric[]>): Promise<void>;
   /** Runtime tile updates (last payload, activity, pending state): persisted lazily (every 10 s). */
   applyRuntime(brokerId: string, m: Metric): void;
   /** Applies many runtime updates with a single store write. */
@@ -176,6 +181,34 @@ export function createAppStore(repo: Repo, lazyMs = 10000) {
       },
       replaceMetrics(brokerId, list) {
         edit(brokerId, () => list);
+      },
+
+      async replaceAll(brokers, metricsByBroker) {
+        const old = get().brokers;
+        const oldLists = await Promise.all(
+          old.map(async (b) => get().metrics[b.id] ?? (await repo.loadMetrics(b.id).catch(() => [] as Metric[]))),
+        );
+        // Drop pending lazy/edit saves: they would overwrite the imported data with stale lists.
+        if (timer) clearTimeout(timer);
+        timer = null;
+        for (const t of editTimers.values()) clearTimeout(t);
+        editTimers.clear();
+        dirty.clear();
+        let autoConnectTaken = false;
+        const next = brokers.map((b) => {
+          const auto = b.autoConnect && !autoConnectTaken;
+          autoConnectTaken ||= auto;
+          return auto === b.autoConnect ? b : { ...b, autoConnect: auto };
+        });
+        const metrics = Object.fromEntries(next.map((b) => [b.id, metricsByBroker[b.id] ?? []]));
+        const keptIds = new Set(Object.values(metrics).flatMap((l) => l.map((m) => m.id)));
+        set({ brokers: next, metrics });
+        await repo.saveBrokers(next);
+        await Promise.all(next.map((b) => repo.saveMetrics(b.id, metrics[b.id])));
+        const newIds = new Set(next.map((b) => b.id));
+        await Promise.all(old.filter((b) => !newIds.has(b.id)).map((b) => repo.deleteMetrics(b.id)));
+        const gone = oldLists.flat().filter((m) => isHistoryMetric(m) && !keptIds.has(m.id));
+        await Promise.all(gone.map((m) => historyRecorder.forget(m.id).catch(() => {})));
       },
 
       applyRuntime(brokerId, m) {

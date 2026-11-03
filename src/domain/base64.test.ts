@@ -1,4 +1,4 @@
-import { toBase64 } from './base64';
+import { fromBase64, toBase64 } from './base64';
 
 describe('toBase64', () => {
   it('matches the RFC 4648 vectors', () => {
@@ -14,5 +14,17 @@ describe('toBase64', () => {
   it('handles all byte values', () => {
     const all = Uint8Array.from({ length: 256 }, (_, i) => i);
     expect(toBase64(all)).toBe(Buffer.from(all).toString('base64'));
+  });
+});
+
+describe('fromBase64', () => {
+  it('inverts toBase64 for every length', () => {
+    for (let n = 0; n < 8; n++) {
+      const bytes = Uint8Array.from({ length: n }, (_, i) => (i * 37 + 200) & 255);
+      expect(Array.from(fromBase64(toBase64(bytes)))).toEqual(Array.from(bytes));
+    }
+  });
+  it('rejects invalid characters', () => {
+    expect(() => fromBase64('a$b=')).toThrow();
   });
 });

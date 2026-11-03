@@ -1,6 +1,7 @@
 import { newBroker, newMetric } from '../domain/defaults';
 import { createAppStore } from './appStore';
 import { MemoryKV, Repo } from './repo';
+import { historyRecorder } from '../history/shared';
 
 const make = async () => {
   const kv = new MemoryKV();
@@ -137,5 +138,48 @@ describe('appStore', () => {
       expect(store.getState().setWidgetRect(b.id, a.id, { x: cm.gx!, y: cm.gy!, w: 6, h: 4 })).toBe(false);
       expect(store.getState().metrics[b.id].find((m) => m.id === a.id)!.gy).toBe(10);
     });
+  });
+});
+
+describe('appStore.replaceAll', () => {
+  const histMetric = (id: string) => newMetric(3, { id, name: 'h', widget: 'historyChart' });
+
+  it('replaces brokers and metrics, persists them and forgets removed history', async () => {
+    const forget = jest.spyOn(historyRecorder, 'forget').mockResolvedValue();
+    const { store, kv } = await make();
+    const old = store.getState().addBroker(newBroker({ name: 'old', id: 'old' }));
+    store.getState().addMetric(old.id, histMetric('h-gone'));
+    store.getState().addMetric(old.id, histMetric('h-kept'));
+    await store.getState().flush();
+
+    const nb = newBroker({ longId: 1, id: 'new', name: 'imported', autoConnect: true });
+    const nb2 = newBroker({ longId: 2, id: 'new2', name: 'imported2', autoConnect: true });
+    await store.getState().replaceAll([nb, nb2], { new: [histMetric('h-kept'), newMetric(1, { id: 'plain' })] });
+
+    const s = store.getState();
+    expect(s.brokers.map((b) => b.id)).toEqual(['new', 'new2']);
+    expect(s.brokers.map((b) => b.autoConnect)).toEqual([true, false]);
+    expect(s.metrics['new'].map((m) => m.id)).toEqual(['h-kept', 'plain']);
+    expect(s.metrics['new2']).toEqual([]);
+    expect(s.metrics['old']).toBeUndefined();
+    expect(await kv.getItem('metrics:old')).toBeNull();
+
+    const reloaded = createAppStore(new Repo(kv));
+    await reloaded.getState().load();
+    expect(reloaded.getState().brokers.map((b) => b.name)).toEqual(['imported', 'imported2']);
+    expect(reloaded.getState().metrics['new'].map((m) => m.id)).toEqual(['h-kept', 'plain']);
+    expect(forget.mock.calls.map((c) => c[0])).toEqual(['h-gone']);
+    forget.mockRestore();
+  });
+
+  it('is not overwritten by saves that were pending before the import', async () => {
+    const { store, kv } = await make();
+    const b = store.getState().brokers[0];
+    store.getState().addMetric(b.id, newMetric(1, { id: 'stale' }));
+    await store.getState().replaceAll([b], { [b.id]: [newMetric(1, { id: 'fresh' })] });
+    await new Promise((r) => setTimeout(r, 400));
+    const reloaded = createAppStore(new Repo(kv));
+    await reloaded.getState().load();
+    expect(reloaded.getState().metrics[b.id].map((m) => m.id)).toEqual(['fresh']);
   });
 });

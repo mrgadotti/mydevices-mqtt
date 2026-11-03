@@ -1,9 +1,12 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useLayoutEffect } from 'react';
+import React, { useLayoutEffect, useState } from 'react';
 import { LANGS, U, updateSettings, useSettings } from '../i18n';
+import type { ParsedBackup } from '../domain/backup';
 import { ActionIcons } from './ActionIcons';
+import { ConfirmDialog } from './dialogs';
 import { exportConfiguration, exportHistory } from './exportData';
 import { GithubLink } from './GithubLink';
+import { applyConfiguration, pickConfiguration } from './importData';
 import type { RootStackParamList } from './navigation';
 import { useToast } from './toast';
 import { FlatButton, FormScroll, Label, Radio } from './widgets';
@@ -23,6 +26,24 @@ export function SettingsScreen({ navigation }: Props) {
       () => toast(U.export_failed),
     );
 
+  const [pending, setPending] = useState<ParsedBackup | null>(null);
+  const pickImport = () =>
+    pickConfiguration().then(
+      (r) => {
+        if (r.status === 'ok') setPending(r);
+        else if (r.status === 'error') toast(r.error === 'not_backup' || r.error === 'invalid_json' ? U.import_invalid : r.error === 'unsupported_version' ? U.import_unsupported : U.import_failed);
+      },
+      () => toast(U.import_failed),
+    );
+  const confirmImport = (backup: ParsedBackup) => {
+    setPending(null);
+    applyConfiguration(backup, settings).then(
+      () => toast(U.import_done),
+      () => toast(U.import_failed),
+    );
+  };
+  const countWidgets = (b: ParsedBackup) => Object.values(b.metricsByBroker).reduce((n, l) => n + l.length, 0);
+
   useLayoutEffect(() => {
     navigation.setOptions({
       title: U.settings,
@@ -32,6 +53,13 @@ export function SettingsScreen({ navigation }: Props) {
 
   return (
     <FormScroll>
+      {pending ? (
+        <ConfirmDialog
+          message={U.import_ask.replace('{brokers}', String(pending.brokers.length)).replace('{widgets}', String(countWidgets(pending)))}
+          onYes={() => confirmImport(pending)}
+          onClose={() => setPending(null)}
+        />
+      ) : null}
       <Label>{U.language}</Label>
       <Radio selected={language === 'system'} onPress={() => updateSettings({ language: 'system' })}>
         {U.system_default}
@@ -54,6 +82,7 @@ export function SettingsScreen({ navigation }: Props) {
       <Label top={16}>{U.export_section}</Label>
       <FlatButton title={U.export_config} onPress={run(() => exportConfiguration(settings))} />
       <FlatButton title={U.export_history} onPress={run(exportHistory)} />
+      <FlatButton title={U.import_config} onPress={pickImport} />
       <GithubLink />
     </FormScroll>
   );
