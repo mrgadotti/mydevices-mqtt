@@ -53,6 +53,17 @@ export function pushBounded<T>(buf: T[], item: T, cap: number): T[] {
   return next.length > cap ? next.slice(next.length - cap) : next;
 }
 
+/**
+ * True when the metric's current message (identified by its last activity time and value) was not recorded yet, and
+ * remembers it in `seen`. A widget that remounts with the same message must not record it a second time.
+ */
+export function claimMessage(seen: Map<string, string>, id: string, lastActivity: number, value: string): boolean {
+  const key = `${lastActivity}\u0000${value}`;
+  if (seen.get(id) === key) return false;
+  seen.set(id, key);
+  return true;
+}
+
 /** SVG polyline path of a series scaled into w x h (flat series draw a middle line). */
 export function chartPath(values: number[], w: number, h: number): string {
   if (values.length === 0) return '';

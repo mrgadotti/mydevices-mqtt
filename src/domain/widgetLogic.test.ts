@@ -1,4 +1,4 @@
-import { chartPath, hexToHsv, hsvToHex, joystickPayload, joystickPosition, opt, pushBounded, stepValue } from './widgetLogic';
+import { chartPath, claimMessage, hexToHsv, hsvToHex, joystickPayload, joystickPosition, opt, pushBounded, stepValue } from './widgetLogic';
 
 describe('stepValue', () => {
   it('steps and clamps', () => {
@@ -55,5 +55,30 @@ describe('opt', () => {
     expect(opt({ step: 2 }, 'step', 1)).toBe(2);
     expect(opt({ step: 'x' }, 'step', 1)).toBe(1);
     expect(opt(undefined, 'style', 'solid')).toBe('solid');
+  });
+});
+
+describe('claimMessage', () => {
+  it('records a message once, even when the widget remounts with it', () => {
+    const seen = new Map<string, string>();
+    expect(claimMessage(seen, 'a', 100, 'boot ok')).toBe(true);
+    expect(claimMessage(seen, 'a', 100, 'boot ok')).toBe(false);
+  });
+  it('records a new message with the same payload and a newer time', () => {
+    const seen = new Map<string, string>();
+    expect(claimMessage(seen, 'a', 100, 'x')).toBe(true);
+    expect(claimMessage(seen, 'a', 101, 'x')).toBe(true);
+  });
+  it('records a different payload at the same time', () => {
+    const seen = new Map<string, string>();
+    expect(claimMessage(seen, 'a', 100, 'x')).toBe(true);
+    expect(claimMessage(seen, 'a', 100, 'y')).toBe(true);
+  });
+  it('keeps metrics independent', () => {
+    const seen = new Map<string, string>();
+    expect(claimMessage(seen, 'a', 100, 'x')).toBe(true);
+    expect(claimMessage(seen, 'b', 100, 'x')).toBe(true);
+    expect(claimMessage(seen, 'a', 100, 'x')).toBe(false);
+    expect(claimMessage(seen, 'b', 100, 'x')).toBe(false);
   });
 });
