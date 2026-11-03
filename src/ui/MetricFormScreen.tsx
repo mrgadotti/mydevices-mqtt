@@ -92,6 +92,7 @@ export function MetricFormScreen({ navigation, route }: Props) {
     };
     navigation.setOptions({
       title: S.app_name,
+      headerLeft: () => <ActionIcons items={[{ icon: 'close', label: S.close, onPress: () => navigation.goBack() }]} />,
       headerRight: () => <ActionIcons items={[{ icon: 'menu_save', label: S.action_save, onPress: save }]} />,
     });
   });

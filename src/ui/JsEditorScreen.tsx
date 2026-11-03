@@ -2,7 +2,8 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useLayoutEffect, useState } from 'react';
 import { Linking, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { deliverPick, getScriptDraft, type RootStackParamList } from './navigation';
-import { S } from '../i18n';
+import { S, U } from '../i18n';
+import { ActionIcons } from './ActionIcons';
 import { useColors } from './colors';
 import { useToast } from './toast';
 
@@ -25,6 +26,7 @@ export function JsEditorScreen({ navigation, route }: Props) {
   useLayoutEffect(() => {
     navigation.setOptions({
       title,
+      headerLeft: () => <ActionIcons items={[{ icon: 'arrow_back', label: U.back, onPress: () => navigation.goBack() }]} />,
       headerRight: () => (
         <View style={s.actions}>
           <Pressable style={s.action} onPress={() => void Linking.openURL(helpUrl(kind)).catch((e: Error) => toast(e.message))}>

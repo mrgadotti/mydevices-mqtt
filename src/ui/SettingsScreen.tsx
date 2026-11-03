@@ -1,6 +1,7 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useLayoutEffect } from 'react';
 import { LANGS, U, updateSettings, useSettings } from '../i18n';
+import { ActionIcons } from './ActionIcons';
 import { exportConfiguration, exportHistory } from './exportData';
 import { GithubLink } from './GithubLink';
 import type { RootStackParamList } from './navigation';
@@ -23,7 +24,10 @@ export function SettingsScreen({ navigation }: Props) {
     );
 
   useLayoutEffect(() => {
-    navigation.setOptions({ title: U.settings });
+    navigation.setOptions({
+      title: U.settings,
+      headerLeft: () => <ActionIcons items={[{ icon: 'arrow_back', label: U.back, onPress: () => navigation.goBack() }]} />,
+    });
   }, [navigation, language]);
 
   return (

@@ -151,14 +151,14 @@ export function BrokersListScreen({ navigation }: Props) {
 
       {about ? (
         <Dialog onClose={() => setAbout(false)}>
-          <AboutBody />
+          <AboutBody onClose={() => setAbout(false)} />
         </Dialog>
       ) : null}
     </View>
   );
 }
 
-function AboutBody() {
+function AboutBody({ onClose }: { onClose: () => void }) {
   const c = useColors();
   const light = useSkin().background === '#FBFBFB';
   const small = (t: string) => (
@@ -168,6 +168,9 @@ function AboutBody() {
   );
   return (
     <ScrollView style={{ maxHeight: 420 }}>
+      <View style={{ alignItems: 'flex-end' }}>
+        <ActionIcons items={[{ icon: 'close', label: S.close, onPress: onClose }]} />
+      </View>
       <Text style={[s.aboutLarge, { color: c.textPrimary }]}>{S.mqtt_dash}</Text>
       {small('MQTT client and dashboard for Android')}
       {small(`${U.version_label} ${app.expo.version}`)}
