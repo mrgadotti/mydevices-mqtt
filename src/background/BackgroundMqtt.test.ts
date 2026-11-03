@@ -1,7 +1,7 @@
 import { newBroker, newMetric } from '../domain/defaults';
 import type { Broker, Metric } from '../domain/types';
 import { utf8 } from '../mqtt/text';
-import { BackgroundMqtt, type ConnectionLike } from './BackgroundMqtt';
+import { BackgroundMqtt, connectionsDropped, type ConnectionLike } from './BackgroundMqtt';
 
 class FakeConn implements ConnectionLike {
   status: 'disconnected' | 'connecting' | 'connected' = 'disconnected';
@@ -137,6 +137,50 @@ describe('BackgroundMqtt', () => {
     bg.sync([broker], { b1: [t] });
     bg.sync([], {});
     expect(conns[1].stopped).toBe(true);
+  });
+
+  it('records and notifies nothing after the broker was removed, even for late messages', () => {
+    const { bg, conns, notes, recorded, updated } = setup();
+    const t = newMetric(7, { topic: 'a' });
+    const h = newMetric(3, { topic: 'a', widget: 'historyChart' } as Partial<Metric>);
+    bg.sync([broker], { b1: [t, h] });
+    bg.sync([], {});
+    expect(conns[0].stopped).toBe(true);
+    conns[0].emit('a', '1');
+    expect(notes).toHaveLength(0);
+    expect(recorded).toHaveLength(0);
+    expect(updated).toHaveLength(0);
+  });
+
+  it('closes only the connections of brokers that disappeared or changed, keeping unchanged ones', () => {
+    const { bg, conns, statuses } = setup();
+    const b2 = newBroker({ id: 'b2', name: 'two', address: 'h2', clientId: 'c2' });
+    const b3 = newBroker({ id: 'b3', name: 'three', address: 'h3', clientId: 'c3' });
+    const t = newMetric(7, { topic: 'a' });
+    bg.sync([broker, b2, b3], { b1: [t], b2: [t], b3: [t] });
+    // import: b1 unchanged, b2 gone, b3 with a new address
+    bg.sync([broker, { ...b3, address: 'new' }], { b1: [t], b3: [t] });
+    expect(conns.map((c) => c.stopped)).toEqual([false, true, true, false]);
+    expect(conns[3].broker.address).toBe('new');
+    expect(statuses[statuses.length - 1]).toEqual(['home', 'three']);
+  });
+
+  it('reconnects when the local broker flag changes', () => {
+    const { bg, conns } = setup();
+    const t = newMetric(7, { topic: 'a' });
+    bg.sync([broker], { b1: [t] });
+    bg.sync([{ ...broker, localBroker: !broker.localBroker }], { b1: [t] });
+    expect(conns).toHaveLength(2);
+    expect(conns[0].stopped).toBe(true);
+  });
+
+  it('connectionsDropped flags removed and reconfigured brokers only', () => {
+    const b2 = newBroker({ id: 'b2' });
+    expect(connectionsDropped([broker, b2], [broker, b2])).toBe(false);
+    expect(connectionsDropped([broker], [broker, b2])).toBe(false);
+    expect(connectionsDropped([broker, b2], [broker])).toBe(true);
+    expect(connectionsDropped([broker], [{ ...broker, port: '1' }])).toBe(true);
+    expect(connectionsDropped([broker], [{ ...broker, name: 'renamed' }])).toBe(false);
   });
 
   it('ignores notification tiles with no topic', () => {

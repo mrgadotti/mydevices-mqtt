@@ -7,7 +7,7 @@ import { historyRecorder } from '../history/shared';
 import { U } from '../i18n';
 import { localBroker, localBrokerUsage } from '../localBroker/LocalBroker';
 import { localPort } from '../localBroker/usage';
-import { BackgroundMqtt } from './BackgroundMqtt';
+import { BackgroundMqtt, connectionsDropped } from './BackgroundMqtt';
 import { showEventNotification, startServiceNotification, stopServiceNotification } from './notifications';
 
 let started = false;
@@ -77,7 +77,11 @@ export function startBackground(): void {
   appStore.subscribe((state, prev) => {
     if (state.brokers === prev.brokers && state.metrics === prev.metrics && state.ready === prev.ready) return;
     if (timer) clearTimeout(timer);
-    timer = setTimeout(sync, 400);
+    // A removed or reconfigured broker must stop being watched right away; other changes are debounced.
+    if (state.ready && connectionsDropped(prev.brokers, state.brokers)) {
+      timer = null;
+      sync();
+    } else timer = setTimeout(sync, 400);
   });
   sync();
 }

@@ -162,6 +162,12 @@ export function DashboardScreen({ navigation, route }: Props) {
   const [overlay, setOverlay] = useState<Overlay | null>(null);
   useKeepAwake(broker?.keepScreenOn ? 'dashboard' : undefined);
 
+  // The broker can disappear while its dashboard is open (configuration import): leave instead of showing an empty screen.
+  const brokerGone = !broker;
+  useEffect(() => {
+    if (brokerGone) navigation.reset({ index: 0, routes: [{ name: 'Brokers' }] });
+  }, [brokerGone, navigation]);
+
   useEffect(() => session.onToast(toast), [session, toast]);
   useEffect(() => {
     cancelAutoConnect();

@@ -38,6 +38,17 @@ describe('appStore', () => {
     expect(await kv.getItem(`metrics:${b.id}`)).toBeNull();
   });
 
+  it('ignores late runtime updates for a removed broker instead of resurrecting its data', async () => {
+    const { store } = await make();
+    const b = store.getState().addBroker(newBroker({ name: 'gone' }));
+    const m = store.getState().addMetric(b.id, newMetric(1, { name: 'a' }));
+    store.getState().removeBroker(b.id);
+    store.getState().applyRuntime(b.id, { ...m, lastPayload: 'late' });
+    store.getState().applyRuntimeBatch(b.id, [{ ...m, lastPayload: 'late' }]);
+    expect(store.getState().metrics[b.id]).toBeUndefined();
+    await store.getState().flush();
+  });
+
   it('reorders brokers', async () => {
     const { store } = await make();
     store.getState().addBroker(newBroker({ name: 'a' }));

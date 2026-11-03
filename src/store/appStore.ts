@@ -215,7 +215,8 @@ export function createAppStore(repo: Repo, lazyMs = 10000) {
         get().applyRuntimeBatch(brokerId, [m]);
       },
       applyRuntimeBatch(brokerId, list) {
-        if (list.length === 0) return;
+        // A late update (a message arriving while the connection closes) must not resurrect a removed broker's data.
+        if (list.length === 0 || !get().brokers.some((b) => b.id === brokerId)) return;
         const byId = new Map(list.map((m) => [m.id, m]));
         setList(
           brokerId,

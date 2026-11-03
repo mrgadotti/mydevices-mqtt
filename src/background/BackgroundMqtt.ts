@@ -36,9 +36,20 @@ interface Watch {
   tiles: NotificationMetric[];
   /** Metrics recorded by history charts (not notified). */
   history: Metric[];
+  /** Set once the connection is stopped: late messages of a closed watch must not touch the store. */
+  closed: boolean;
 }
 
-const connectionKey = (b: Broker): string => JSON.stringify([b.address, b.port, b.ssl, b.trust, b.user, b.password, b.clientId]);
+const connectionKey = (b: Broker): string => JSON.stringify([b.localBroker, b.address, b.port, b.ssl, b.trust, b.user, b.password, b.clientId]);
+
+/** True when going from `prev` to `next` removes a broker or changes its connection settings (its connections must close now). */
+export function connectionsDropped(prev: Broker[], next: Broker[]): boolean {
+  const byId = new Map(next.map((b) => [b.id, b]));
+  return prev.some((b) => {
+    const n = byId.get(b.id);
+    return !n || connectionKey(n) !== connectionKey(b);
+  });
+}
 
 /**
  * Keeps one MQTT connection per broker that has notification tiles, independent of any open screen, and turns
@@ -61,6 +72,7 @@ export class BackgroundMqtt {
     for (const [id, w] of [...this.watches]) {
       const next = wanted.get(id);
       if (!next || connectionKey(next.broker) !== w.key) {
+        w.closed = true;
         w.conn.stop();
         this.watches.delete(id);
       }
@@ -70,7 +82,7 @@ export class BackgroundMqtt {
       let w = this.watches.get(id);
       if (!w) {
         const conn = this.deps.createConnection({ ...broker, clientId: `${broker.clientId}-bg` });
-        w = { conn, key: connectionKey(broker), name: broker.name, tiles, history };
+        w = { conn, key: connectionKey(broker), name: broker.name, tiles, history, closed: false };
         this.watches.set(id, w);
         const watch = w;
         conn.onMessage((topic, payload) => this.onMessage(id, watch, topic, payload));
@@ -98,7 +110,10 @@ export class BackgroundMqtt {
   }
 
   stopAll(): void {
-    for (const w of this.watches.values()) w.conn.stop();
+    for (const w of this.watches.values()) {
+      w.closed = true;
+      w.conn.stop();
+    }
     this.watches.clear();
     if (this.lastActive !== '[]') {
       this.lastActive = '[]';
@@ -113,6 +128,7 @@ export class BackgroundMqtt {
   }
 
   private onMessage(brokerId: string, watch: Watch, topic: string, bytes: Uint8Array): void {
+    if (watch.closed) return;
     const text = fromUtf8(bytes);
     const t = this.deps.now();
     if (watch.history.length > 0) this.deps.record?.(watch.history, topic, text);
