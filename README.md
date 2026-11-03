@@ -20,14 +20,23 @@ Also included:
 - A default broker (`broker.emqx.io:1883`) on first run.
 - **Local broker**: the phone can run its own MQTT broker (see [Local broker](#local-broker)), so ESP32 boards on the
   same Wi-Fi need no external server.
-- **Widget UI**: 36 widgets on a 24-column grid, each bound to MQTT topics: Button, Styled Button, Icon Button, Switch,
+- **Widget UI**: 37 widgets on a 24-column grid, each bound to MQTT topics: Button, Styled Button, Icon Button, Switch,
   Slider, Vertical Slider, Step Slider (both), Step H/V, Level Slider, Joystick, zeRGBa, Color Picker, Value Display,
-  Labeled Value, LED, Gauge, Radial and Enhanced Gauge, LCD, SimpleChart, Terminal, Log, Level H/V, Image, Icon, Menu, Text /
+  Labeled Value, LED, Gauge, Radial and Enhanced Gauge, LCD, SimpleChart, History Chart, Terminal, Log, Level H/V, Image, Icon, Menu, Text /
   Numeric / Time Input, Segmented Switch, Text, Dynamic Spacer and Notification. Edit mode (pencil) shows the grid, a tap
   selects a widget, dragging moves it, the corner handle resizes it, and a toolbox adds, edits, duplicates and deletes.
   The Widget Box lists them as Controllers, Displays, Interface and Other.
   Rectangles are stored as optional `gx/gy/gw/gh` and per-widget settings in `opts`; tiles saved by older versions are
   placed automatically.
+- **History chart**: a line chart that keeps its data. Every numeric message on the widget's topic is stored in a local
+  SQLite database (`history.db`), also while the dashboard is closed (the foreground service keeps recording), and the
+  chart shows a window from 1 hour to 30 days. Touch and drag on the line to read the value and the time. A minimum
+  interval per widget (default 10 s) limits how much is stored, old samples are pruned, and the toolbox of the edit mode
+  has a button to clear a widget's history, after a confirmation.
+- **Export and import** (Settings): *Export configuration* shares one JSON file with the settings, brokers (passwords
+  included, base64 encoded, which is not encryption: keep the file private), dashboards and widgets; *Import
+  configuration* reads such a file and replaces everything after a confirmation; *Export history* shares the
+  `history.db` file. Importing the history database is not implemented.
 - **Languages and themes**: English, Portuguese (Brazil), Spanish and German, with a dark and a light theme. The gear
   icon in the top bar of the main screen opens Settings, where the language and the theme are chosen (or left on
   "System default"). Changes apply at once and are remembered. Texts live in `src/i18n`; user data such as widget
@@ -37,7 +46,7 @@ Also included:
 
 ## Screenshots
 
-Moto G7 Power, release build, dark theme, demo dashboard with one widget of every kind (`tools/publish-demo.ts widgets`).
+Moto G7 Power, release build 1.2.1, dark theme, English, demo dashboard with one widget of every kind (`tools/publish-demo.ts widgets`).
 
 | Devices | Dashboard | Dashboard (scrolled) |
 |---|---|---|
@@ -47,13 +56,13 @@ Moto G7 Power, release build, dark theme, demo dashboard with one widget of ever
 |---|---|---|
 | <img src="docs/screenshots/dashboard-3.png" width="240"> | <img src="docs/screenshots/edit-mode.png" width="240"> | <img src="docs/screenshots/widget-box.png" width="240"> |
 
-| Settings | Broker settings | Replace the default broker |
+| Settings (language, theme, export / import) | Broker settings | Replace the default broker |
 |---|---|---|
 | <img src="docs/screenshots/settings.png" width="240"> | <img src="docs/screenshots/broker-settings.png" width="240"> | <img src="docs/screenshots/default-broker-replace.png" width="240"> |
 
-| Local broker settings |
-|---|
-| <img src="docs/screenshots/local-broker.png" width="240"> |
+| Local broker settings | History chart | History chart settings |
+|---|---|---|
+| <img src="docs/screenshots/local-broker.png" width="240"> | <img src="docs/screenshots/history-chart.png" width="240"> | <img src="docs/screenshots/history-settings.png" width="240"> |
 
 ## Local broker
 
@@ -113,6 +122,7 @@ form; sizes are in cells of the 24-column grid (default size shown).
 | Enhanced Gauge (12x12) | Arc with tick marks and min / max labels. |
 | LCD (12x4) | Payload on an LCD-style panel. |
 | SimpleChart (24x14) | Line chart of the numbers received while the dashboard is open (last 200), with min, max and the latest value. |
+| History Chart (24x14) | Line chart over a stored window (1 h to 30 days), with a time axis, grid, the latest value and a touch tooltip. The data lives in the local SQLite history. |
 | Terminal (24x14) | Received lines (optional timestamps) and an input line that publishes what you type. |
 | Log (24x14) | Every message matching the topic filter (`#` and `+` allowed): time, topic, payload, QoS and a retained flag, in a ring buffer (*Max lines*, default 500). Scrolling up pauses it, the trash button clears it. It records only while the dashboard is open. |
 | Level H / Level V | Horizontal or vertical bar filled by the value. |
@@ -203,6 +213,7 @@ Displays only subscribe, except where the Sends column says otherwise.
 | Enhanced Gauge | Same as Gauge | `80` fills 80% of the arc; min and max are printed under it | Nothing |
 | LCD | Prefix / postfix | `12:34` shows `12:34` on the LCD panel | Nothing |
 | SimpleChart | opts: line width (default 2) | `50`, then `55`, `48`: each number adds a point (last 200 while the dashboard is open); non numeric payloads are skipped | Nothing |
+| History Chart | opts: window (1 h, 6 h, 24 h, 7 d, 30 d), minInterval (seconds, default 10), line width | `50`, then `55`, `48`: each number is stored (at most one per minInterval) and drawn over the window; non numeric payloads are skipped | Touch and drag shows the value and the time |
 | Terminal | opts: timestamps, newline | `boot ok` appends a line (with the time when timestamps is on) | A line typed and sent with the keyboard's send key: `reboot` (plus `\n` when newline is on); empty input is not sent |
 | Level H / Level V | Min / max | `55` fills 55% of the bar | Nothing |
 | Image | Kind: URL, URL in payload, data in payload; reload interval | Kind "URL in payload": `https://www.gstatic.com/webp/gallery/1.png`; kind "data in payload": the raw image bytes (for example `mosquitto_pub -h broker.emqx.io -t mqttiot/widgets/image -f photo.png`); kind "URL": payloads are ignored and the fixed URL reloads every interval | Nothing (tap opens the image, or the tile's open URL) |
@@ -273,6 +284,7 @@ npx expo start --dev-client    # then open the app, or: adb reverse tcp:8081 tcp
 | `src/mqtt` | MQTT 3.1.1 client on MQTT.js, reconnecting connection, TCP/TLS (react-native-tcp-socket) and WebSocket transports |
 | `src/scripting` | The `event` / `app` scripting API on top of Hermes' `eval` (guide with examples: [docs/scripting.md](docs/scripting.md)) |
 | `src/background` | Notification tile service (Notifee, local notifications only) |
+| `src/history` | SQLite history (`expo-sqlite`), the recorder and the downsampling used by the history chart |
 | `src/store` | Persistence (brokers list + one tile list per broker) |
 | `src/ui` | Screens, widgets (`src/ui/widgets`), grid and dialogs; `icons/Icon.tsx` holds the icon set |
 | `src/i18n` | Language and theme settings, the English texts (`en.ts`) and the `pt-BR`, `es` and `de` tables in `locales/` |
