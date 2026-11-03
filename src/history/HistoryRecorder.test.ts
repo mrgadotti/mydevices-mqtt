@@ -74,6 +74,20 @@ describe('HistoryRecorder', () => {
     expect(db.rows.has(m.id)).toBe(false);
   });
 
+  it('clears history and restarts recording cleanly', async () => {
+    const { db, rec, advance, time } = setup();
+    const m = hist();
+    await rec.handleMessage([m], 't/temp', '1');
+    expect((await db.query(m.id, 0, time() + 1000)).length).toBeGreaterThan(0);
+    await rec.forget(m.id);
+    expect(await db.query(m.id, 0, time() + 1000)).toEqual([]);
+    expect(await db.latest(m.id)).toBeNull();
+    // The minimum interval no longer applies to the cleared metric.
+    advance(1);
+    await rec.handleMessage([m], 't/temp', '2');
+    expect(db.rows.get(m.id)?.map((s) => s.value)).toEqual([2]);
+  });
+
   it('serves downsampled queries and the latest sample', async () => {
     const { db } = setup();
     for (let i = 0; i < 1000; i++) await db.record('x', i * 1000, i);

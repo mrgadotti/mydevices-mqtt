@@ -7,7 +7,7 @@ import { buildDisplay } from '../domain/display';
 import { currentValue, isPending, nextSwitchPayload, parseJavaFloat, rangeValue } from '../domain/metrics';
 import type { ImageMetric, Metric } from '../domain/types';
 import { ActionIcons } from './ActionIcons';
-import { AlertMessage, ConfirmDialog, HsvColorDialog, ImagePopup, ListDialog, MultiDialog, RangeDialog, SetValueDialog } from './dialogs';
+import { AlertMessage, ClearHistoryDialog, ConfirmDialog, HsvColorDialog, ImagePopup, ListDialog, MultiDialog, RangeDialog, SetValueDialog } from './dialogs';
 import { evalBlink, runOnDisplay, runOnTap } from '../scripting/hooks';
 import { makeHookEnv } from './scriptApp';
 import { runtimeStore, useTileRuntime } from './runtime';
@@ -23,6 +23,8 @@ import { useSkin } from './useSkin';
 import { canPlace, firstFree, layoutWidgets, needsClock, widgetKindOf, WIDGET_SPECS, type Rect, type WidgetKind } from '../domain/widgets';
 import { appStore, useApp } from './store';
 import { S, U, X } from '../i18n';
+import { clearHistory } from '../history/shared';
+import { isHistoryMetric } from '../history/HistoryRecorder';
 import { useToast } from './toast';
 import { useBrokerSession, type BrokerSession } from './useBrokerSession';
 import { cancelAutoConnect } from './BrokersListScreen';
@@ -33,6 +35,7 @@ type Overlay =
   | { kind: 'choose'; at?: { x: number; y: number } }
   | { kind: 'delete'; metric: Metric }
   | { kind: 'retained'; metric: Metric }
+  | { kind: 'clearHistory'; metric: Metric }
   | { kind: 'alert'; message: string }
   | { kind: 'text'; metric: Metric }
   | { kind: 'range'; metric: Metric }
@@ -334,6 +337,7 @@ export function DashboardScreen({ navigation, route }: Props) {
                 }
               }}
             />
+            {selected && isHistoryMetric(selected) ? <ToolButton icon="delete_sweep" skin={skin} onPress={() => setOverlay({ kind: 'clearHistory', metric: selected })} /> : null}
             <ToolButton icon="trash" skin={skin} disabled={!selected} onPress={() => selected && setOverlay({ kind: 'delete', metric: selected })} />
             <ToolButton
               icon="data_removal"
@@ -361,6 +365,15 @@ export function DashboardScreen({ navigation, route }: Props) {
             const m = overlay.metric;
             if (m.topic.trim().length > 0) void session.publishRaw(m.topic, '', true, 0).catch(() => {});
             if (m.topicPub.trim().length > 0) void session.publishRaw(m.topicPub, '', true, 0).catch(() => {});
+          }}
+        />
+      ) : null}
+
+      {overlay?.kind === 'clearHistory' ? (
+        <ClearHistoryDialog
+          onClose={close}
+          onYes={() => {
+            void clearHistory(overlay.metric.id).then(() => toast(U.history_cleared));
           }}
         />
       ) : null}

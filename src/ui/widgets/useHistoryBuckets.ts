@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { Bucket } from '../../history/downsample';
-import { history } from '../../history/shared';
+import { history, onHistoryCleared } from '../../history/shared';
 
 /** Chart refreshes triggered by incoming values are coalesced to at most one per this many ms. */
 const REFRESH_MS = 1000;
@@ -11,6 +11,8 @@ const REFRESH_MS = 1000;
  */
 export function useHistoryBuckets(metricId: string, windowMs: number, lastActivity: number): { buckets: Bucket[]; from: number; to: number; loaded: boolean } {
   const [state, setState] = useState({ buckets: [] as Bucket[], from: Date.now() - windowMs, to: Date.now(), loaded: false });
+  const [cleared, setCleared] = useState(0);
+  useEffect(() => onHistoryCleared((id) => id === metricId && setCleared((n) => n + 1)), [metricId]);
   useEffect(() => {
     let cancelled = false;
     const t = setTimeout(
@@ -33,6 +35,6 @@ export function useHistoryBuckets(metricId: string, windowMs: number, lastActivi
       clearTimeout(t);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [metricId, windowMs, lastActivity]);
+  }, [metricId, windowMs, lastActivity, cleared]);
   return state;
 }

@@ -5,13 +5,16 @@ import { cssColor } from '../domain/android';
 import { newMetric } from '../domain/defaults';
 import type { ImageKind, Metric, MultiSwitchItem, TextSize } from '../domain/types';
 import { ActionIcons } from './ActionIcons';
-import { AlertMessage, ConfirmDialog, SpectrumDialog } from './dialogs';
+import { AlertMessage, ClearHistoryDialog, ConfirmDialog, SpectrumDialog } from './dialogs';
 import { Icon } from './icons/Icon';
 import { widgetKindOf } from '../domain/widgets';
 import { OPTION_FIELDS } from './widgets/optionFields';
 import { setPickHandler, setScriptDraft, type RootStackParamList } from './navigation';
 import { appStore } from './store';
 import { S, U, X, tl } from '../i18n';
+import { clearHistory } from '../history/shared';
+import { isHistoryMetric } from '../history/HistoryRecorder';
+import { useToast } from './toast';
 import { useColors } from './colors';
 import { Check, ColorSurface, Description, Dialog, Field, FlatButton, FormScroll, Label, Radio } from './widgets';
 
@@ -60,6 +63,8 @@ export function MetricFormScreen({ navigation, route }: Props) {
   const [reload, setReload] = useState(initial.type === 5 ? String(initial.reloadInterval) : '');
   const [colorFor, setColorFor] = useState<ColorTarget | null>(null);
   const [alert, setAlert] = useState<string | null>(null);
+  const [clearAsk, setClearAsk] = useState(false);
+  const toast = useToast();
   const [optionEdit, setOptionEdit] = useState<{ index: number; item: MultiSwitchItem } | null>(null);
   const [optionMenu, setOptionMenu] = useState<number | null>(null);
   const [optionDelete, setOptionDelete] = useState<number | null>(null);
@@ -153,6 +158,7 @@ export function MetricFormScreen({ navigation, route }: Props) {
       ) : null}
 
       <WidgetOptions metric={m} patch={patch} />
+      {isHistoryMetric(m) ? <FlatButton title={U.history_clear} onPress={() => setClearAsk(true)} style={s.scriptButton} /> : null}
 
       {showJsonPath ? (
         <>
@@ -354,6 +360,14 @@ export function MetricFormScreen({ navigation, route }: Props) {
 
       {colorFor ? (
         <SpectrumDialog selected={colorValue[colorFor]} onClose={() => setColorFor(null)} onOk={(argb) => setColor(colorFor, argb)} />
+      ) : null}
+      {clearAsk ? (
+        <ClearHistoryDialog
+          onClose={() => setClearAsk(false)}
+          onYes={() => {
+            void clearHistory(m.id).then(() => toast(U.history_cleared));
+          }}
+        />
       ) : null}
       {alert ? <AlertMessage message={alert} onClose={() => setAlert(null)} /> : null}
 

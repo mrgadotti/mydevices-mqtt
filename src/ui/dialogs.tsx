@@ -11,6 +11,11 @@ import { RangeRing } from './tiles/RangeRing';
 import { PALETTE_RAMPS, PALETTE_RAMP_ORDER, recentColors, rememberColor } from './paletteColors';
 import { Dialog, Field, FlatButton, Label, Radio } from './widgets';
 
+/** Destructive confirmation for wiping a history chart's recorded samples. */
+export function ClearHistoryDialog({ onYes, onClose }: { onYes: () => void; onClose: () => void }) {
+  return <Dialog message={U.history_clear_ask} onClose={onClose} buttons={[{ title: U.cancel }, { title: U.history_clear, onPress: onYes }]} />;
+}
+
 /** Rows of a plain list dialog ("Choose type", tile and broker menus). */
 export function ListDialog({ title, items, onClose }: { title?: string; items: { title: string; run: () => void }[]; onClose: () => void }) {
   const c = useColors();
