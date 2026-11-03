@@ -32,7 +32,7 @@ export async function showEventNotification(content: NotificationContent, tileId
     id: `${tileId}-${Date.now()}`,
     title: content.title,
     body: content.body,
-    android: { channelId: EVENTS_CHANNEL, importance: AndroidImportance.HIGH, pressAction: { id: 'default' }, autoCancel: true, smallIcon: 'ic_launcher' },
+    android: { channelId: EVENTS_CHANNEL, importance: AndroidImportance.HIGH, pressAction: { id: 'default' }, autoCancel: true, smallIcon: 'ic_stat_duck' },
   });
 }
 
@@ -53,7 +53,7 @@ export async function startServiceNotification(brokerNames: string[], localBroke
       ongoing: true,
       pressAction: { id: 'default' },
       actions: [{ title: exitLabel, pressAction: { id: EXIT_ACTION } }],
-      smallIcon: 'ic_launcher',
+      smallIcon: 'ic_stat_duck',
     },
   });
 }

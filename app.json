@@ -10,6 +10,7 @@
     "plugins": [
       "expo-dev-client",
       "./plugins/withClassicWindow",
+      "./plugins/withSplashLogo",
       "./plugins/withBackgroundService",
       "./plugins/withProguardKeep",
       "./plugins/withLocalBroker",
@@ -18,7 +19,7 @@
     "android": {
       "package": "dev.marcelo.mqttiot",
       "adaptiveIcon": {
-        "backgroundColor": "#1D1E22",
+        "backgroundColor": "#FBFBFB",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png",
         "foregroundImage": "./assets/android-icon-foreground.png"

@@ -15,6 +15,7 @@ export const U_EN = {
   add_new_broker: 'Add new broker',
   widget_box: 'Widget Box',
   edit: 'Edit',
+  back: 'Back',
   no_widgets_yet: 'No widgets yet',
   add_widget_hint: 'Add a widget to show or control a topic.',
   add_widget: 'Add widget',

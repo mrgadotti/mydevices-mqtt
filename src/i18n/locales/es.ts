@@ -33,6 +33,7 @@ export const es: Dict = {
   download_image_from_a_static_url: 'Descargar imagen desde una URL fija (sin MQTT)',
   download_image_from_url_received_as_payload: 'Descargar imagen desde la URL recibida como contenido del payload',
   edit: 'Editar',
+  back: 'Volver',
   edit_option: 'Editar opción',
   empty_value_not_allowed: 'No se permite un valor vacío para esta métrica',
   enable_intermediate_state_option:

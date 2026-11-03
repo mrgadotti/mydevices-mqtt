@@ -13,6 +13,7 @@ export function ActionBar({ options }: NativeStackHeaderProps) {
   return (
     <View style={[s.bar, { paddingTop: insets.top, backgroundColor: skin.background }]}>
       <View style={s.inner}>
+        {options.headerLeft ? options.headerLeft({ canGoBack: true }) : null}
         <Text numberOfLines={1} style={[type.headline1, s.title, { color: skin.text9 }]}>
           {title}
         </Text>
@@ -24,6 +25,6 @@ export function ActionBar({ options }: NativeStackHeaderProps) {
 
 const s = StyleSheet.create({
   bar: { elevation: 4 },
-  inner: { height: 48, flexDirection: 'row', alignItems: 'center', paddingLeft: 16, paddingRight: 8 },
-  title: { flex: 1 },
+  inner: { height: 48, flexDirection: 'row', alignItems: 'center', paddingLeft: 8, paddingRight: 8 },
+  title: { flex: 1, marginLeft: 8 },
 });

@@ -33,6 +33,7 @@ export const ptBR: Dict = {
   download_image_from_a_static_url: 'Baixar imagem de uma URL fixa (sem MQTT)',
   download_image_from_url_received_as_payload: 'Baixar imagem da URL recebida no conteúdo do payload',
   edit: 'Editar',
+  back: 'Voltar',
   edit_option: 'Editar opção',
   empty_value_not_allowed: 'Valor vazio não é permitido para esta métrica',
   enable_intermediate_state_option:

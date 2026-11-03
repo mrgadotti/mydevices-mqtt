@@ -150,7 +150,7 @@ export function BrokersListScreen({ navigation }: Props) {
       ) : null}
 
       {about ? (
-        <Dialog title={S.about} onClose={() => setAbout(false)}>
+        <Dialog onClose={() => setAbout(false)}>
           <AboutBody />
         </Dialog>
       ) : null}
@@ -160,6 +160,7 @@ export function BrokersListScreen({ navigation }: Props) {
 
 function AboutBody() {
   const c = useColors();
+  const light = useSkin().background === '#FBFBFB';
   const small = (t: string) => (
     <Text key={t} style={[s.aboutSmall, { color: c.textSecondary }]}>
       {t}
@@ -171,7 +172,10 @@ function AboutBody() {
       {small('MQTT client and dashboard for Android')}
       {small(`${U.version_label} ${app.expo.version}`)}
       <View style={{ alignItems: 'center', marginTop: 12 }}>
-        <Image source={require('../../assets/icon.png')} style={{ width: 50, height: 50 }} />
+        <Image
+          source={light ? require('../../assets/splash-icon-light.png') : require('../../assets/splash-icon.png')}
+          style={{ width: 120, height: 120 }}
+        />
       </View>
       <GithubLink center />
     </ScrollView>

@@ -177,6 +177,7 @@ export function DashboardScreen({ navigation, route }: Props) {
       title: broker.name,
       headerShown: editable || broker.neverHideBrokerName,
       statusBarHidden: false,
+      headerLeft: () => <ActionIcons items={[{ icon: 'arrow_back', label: U.back, onPress: () => navigation.goBack() }]} />,
       headerRight: () =>
         editable ? (
           <ActionIcons
