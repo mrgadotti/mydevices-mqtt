@@ -20,6 +20,13 @@ export class ExpoHistoryDb implements HistoryDb {
     return new ExpoHistoryDb(db);
   }
 
+  /** Flushes the WAL into the main file and returns its path plus whether any sample is stored. */
+  async prepareExport(): Promise<{ path: string; empty: boolean }> {
+    await this.db.execAsync('PRAGMA wal_checkpoint(TRUNCATE);');
+    const row = await this.db.getFirstAsync<{ n: number }>('SELECT COUNT(*) AS n FROM samples');
+    return { path: this.db.databasePath, empty: !row || row.n === 0 };
+  }
+
   async record(metricId: string, ts: number, value: number): Promise<void> {
     await this.db.runAsync('INSERT INTO samples (metric_id, ts, value) VALUES (?, ?, ?)', metricId, ts, value);
   }

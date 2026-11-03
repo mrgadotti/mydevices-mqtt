@@ -15,7 +15,8 @@
       "./plugins/withProguardKeep",
       "./plugins/withLocalBroker",
       "./plugins/withReleaseSigning",
-      "expo-sqlite"
+      "expo-sqlite",
+      "expo-sharing"
     ],
     "android": {
       "package": "dev.marcelo.mqttiot",

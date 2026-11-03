@@ -2,10 +2,10 @@ import { ExpoHistoryDb } from './ExpoHistoryDb';
 import type { HistoryDb } from './HistoryDb';
 import { HistoryRecorder } from './HistoryRecorder';
 
-let dbPromise: Promise<HistoryDb> | null = null;
+let dbPromise: Promise<ExpoHistoryDb> | null = null;
 
 /** The app-wide history database, opened on first use. */
-export function historyDb(): Promise<HistoryDb> {
+export function historyDb(): Promise<ExpoHistoryDb> {
   if (!dbPromise) {
     dbPromise = ExpoHistoryDb.open();
     dbPromise.catch(() => {

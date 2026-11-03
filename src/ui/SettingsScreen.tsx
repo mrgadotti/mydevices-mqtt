@@ -1,15 +1,26 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useLayoutEffect } from 'react';
 import { LANGS, U, updateSettings, useSettings } from '../i18n';
+import { exportConfiguration, exportHistory } from './exportData';
 import { GithubLink } from './GithubLink';
 import type { RootStackParamList } from './navigation';
-import { FormScroll, Label, Radio } from './widgets';
+import { useToast } from './toast';
+import { FlatButton, FormScroll, Label, Radio } from './widgets';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Settings'>;
 
 /** App preferences: language and theme. They apply at once and are remembered between launches. */
 export function SettingsScreen({ navigation }: Props) {
-  const { language, theme } = useSettings();
+  const settings = useSettings();
+  const { language, theme } = settings;
+  const toast = useToast();
+  const run = (job: () => Promise<boolean | void>) => () =>
+    job().then(
+      (ok) => {
+        if (ok === false) toast(U.export_no_history);
+      },
+      () => toast(U.export_failed),
+    );
 
   useLayoutEffect(() => {
     navigation.setOptions({ title: U.settings });
@@ -36,6 +47,9 @@ export function SettingsScreen({ navigation }: Props) {
       <Radio selected={theme === 'light'} onPress={() => updateSettings({ theme: 'light' })}>
         {U.theme_light}
       </Radio>
+      <Label top={16}>{U.export_section}</Label>
+      <FlatButton title={U.export_config} onPress={run(() => exportConfiguration(settings))} />
+      <FlatButton title={U.export_history} onPress={run(exportHistory)} />
       <GithubLink />
     </FormScroll>
   );
